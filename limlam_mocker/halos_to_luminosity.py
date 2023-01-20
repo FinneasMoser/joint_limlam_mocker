@@ -13,20 +13,24 @@ sfr_interp_tab = None
 def Mhalo_to_Lco(halos, model, coeffs):
     """
     General function to get L_co(M_halo) given a certain model <model>
-    if adding your own model follow this structure, 
+    if adding your own model follow this structure,
     and simply specify the model to use in the parameter file
+    will output halo luminosities in **L_sun**
 
     Parameters
     ----------
-    halos : class 
+    halos : class
         Contains all halo information (position, redshift, etc..)
     model : str
         Model to use, specified in the parameter file
-    coeffs : 
+    coeffs :
         None for default coeffs
     """
     dict = {'Li':          Mhalo_to_Lco_Li,
+            'Li_sc':       Mhalo_to_Lco_Li_sigmasc,
             'Padmanabhan': Mhalo_to_Lco_Padmanabhan,
+            'fiuducial':   Mhalo_to_Lco_fiuducial,
+            'Yang':        Mhalo_to_Lco_Yang,
             'arbitrary':   Mhalo_to_Lco_arbitrary,
             }
 
@@ -39,7 +43,7 @@ def Mhalo_to_Lco(halos, model, coeffs):
 
 def Mhalo_to_Lco_Li(halos, coeffs):
     """
-    halo mass to SFR to L_CO 
+    halo mass to SFR to L_CO
     following the Tony li 2016 model
     arXiv 1503.08833
     """
@@ -66,11 +70,44 @@ def Mhalo_to_Lco_Li(halos, coeffs):
 
     if debug.verbose: print('\n\tMhalo to Lco calculated')
 
-    return Lco 
+    return Lco
+
+def Mhalo_to_Lco_Li_sigmasc(halos, coeffs):
+    """
+    halo mass to SFR to L_CO
+    following the Tony li 2016 model
+    arXiv 1503.08833
+
+    DD 2022 - updated to include a single lognormal scatter coeff
+    """
+    if coeffs is None:
+        # Power law parameters from paper
+        log_delta_mf,alpha,beta,sigma_sc = (
+            0.0, 1.37,-1.74, 0.3)
+    else:
+        log_delta_mf,alpha,beta,sigma_sc = coeffs;
+    delta_mf = 10**log_delta_mf;
+
+    # Get Star formation rate
+    if not hasattr(halos,'sfr'):
+        halos.sfr = Mhalo_to_sfr_Behroozi(halos, sigma_sc);
+
+    # infrared luminosity
+    lir      = halos.sfr * 1e10 / delta_mf
+    alphainv = 1./alpha
+    # Lco' (observers units)
+    Lcop     = lir**alphainv * 10**(-beta * alphainv)
+    # Lco in L_sun
+    Lco      =  4.9e-5 * Lcop
+#    Lco      = add_log_normal_scatter(Lco, sigma_lco, 2) #DD: ?
+
+    if debug.verbose: print('\n\tMhalo to Lco calculated')
+
+    return Lco
 
 def Mhalo_to_Lco_Padmanabhan(halos, coeffs):
     """
-    halo mass to L_CO 
+    halo mass to L_CO
     following the Padmanabhan 2017 model
     arXiv 1706.01471
     """
@@ -93,9 +130,75 @@ def Mhalo_to_Lco_Padmanabhan(halos, coeffs):
 
     return Lco
 
+def Mhalo_to_Lco_fiuducial(halos, coeffs):
+    """
+    DD 2022, based on Chung+2022 fiuducial model
+    arXiv 2111.05931
+    """
+    if coeffs is None:
+        # default to UM+COLDz+COPSS model from Chung+22
+        A, B, logC, logM, sigma = (
+            -2.85, -0.42, 10.63, 12.3, 0.42)
+    else:
+        A,B,logC,logM,sigma = coeffs
+
+    Mh = halos.M
+
+    C = 10**logC
+    M = 10**logM
+
+    Lprime = C / ((Mh/M)**A + (Mh/M)**B)
+    Lco = 4.9e-5 * Lprime
+    Lco = add_log_normal_scatter(Lco, sigma, 3)
+
+    return Lco
+
+def Mhalo_to_Lco_Yang(halos, coeffs):
+    """
+    DD 2022, SAM from Breysse+2022/Yang+2021
+    arXiv 2111.05933/2108.07716
+    Not set up for anything other than CO(1-0) at COMAP redshifts currently
+    becasue the model is a pretty complicated function of redshift
+    for other models edit function directly with parameters from Yang+22
+    """
+    if coeffs is not None:
+        print('The function is only set up for CO(1-0), 1<z<4')
+        return 0
+
+    z = halos.redshift
+    Mh = halos.M
+
+    # Lco function
+    logM1 = 12.13 - 0.1678*z
+    logN = -6.855 + 0.2366*z - 0.05013*z**2
+    alpha = 1.642 + 0.1663*z - 0.03238*z**2
+    beta = 1.77*np.exp(-1/2.72) - 0.00827
+
+    M1 = 10**logM1
+    N = 10**logN
+
+    Lco = 2*N * Mh / ((Mh/M1)**(-alpha) + (Mh/M1)**(-beta))
+
+    # fduty function
+    logM2 = 11.73 + 0.6634*z
+    gamma = 1.37 - 0.190*z + 0.0215*z**2
+
+    M2 = 10**logM2
+
+    fduty = 1 / (1 + (Mh/M2)**gamma)
+
+    Lco = Lco * fduty
+
+    # scatter
+    sigmaco = 0.357 - 0.0701*z + 0.00621*z**2
+
+    Lco = add_log_normal_scatter(Lco, sigmaco, 4)
+    return Lco
+
+
 def Mhalo_to_Lco_arbitrary(halos, coeffs):
     """
-    halo mass to L_CO 
+    halo mass to L_CO
     allows for utterly arbitrary models!
     coeffs:
         coeffs[0] is a function that takes halos as its only argument
@@ -128,12 +231,12 @@ def Mhalo_to_sfr_Behroozi(halos, sigma_sfr, bad_extrapolation=False):
     sfr = sfr_interp_tab.ev(np.log10(halos.M), np.log10(halos.redshift+1))
     sfr = add_log_normal_scatter(sfr, sigma_sfr, 1)
     return sfr
-    
+
 def get_sfr_table(bad_extrapolation=False):
     """
     LOAD SFR TABLE from Behroozi+13a,b
     Columns are: z+1, logmass, logsfr, logstellarmass
-    Intermediate processing of tabulated data      
+    Intermediate processing of tabulated data
     with option to extrapolate to unphysical masses
     """
 
@@ -145,8 +248,8 @@ def get_sfr_table(bad_extrapolation=False):
     dat_sfr    = 10.**dat_logsfr
 
     # Reshape arrays
-    dat_logzp1  = np.unique(dat_logzp1)    # log(z), 1D 
-    dat_logm    = np.unique(dat_logm)    # log(Mhalo), 1D        
+    dat_logzp1  = np.unique(dat_logzp1)    # log(z), 1D
+    dat_logm    = np.unique(dat_logm)    # log(Mhalo), 1D
     dat_sfr     = np.reshape(dat_sfr, (dat_logm.size, dat_logzp1.size))
     dat_logsfr  = np.reshape(dat_logsfr, dat_sfr.shape)
 
@@ -157,7 +260,7 @@ def get_sfr_table(bad_extrapolation=False):
         badspl = SmoothBivariateSpline(dat_logzp1_[-1000<(dat_logsfr)],dat_logm_[-1000<(dat_logsfr)],dat_logsfr[-1000<(dat_logsfr)],kx=4,ky=4)
         dat_sfr[dat_logsfr==-1000.] = 10**badspl(dat_logzp1,dat_logm).T[dat_logsfr==-1000.]
 
-    # Get interpolated SFR value(s)    
+    # Get interpolated SFR value(s)
     sfr_interp_tab = sp.interpolate.RectBivariateSpline(
                             dat_logm, dat_logzp1, dat_sfr,
                             kx=1, ky=1)
@@ -166,17 +269,17 @@ def get_sfr_table(bad_extrapolation=False):
 
 def add_log_normal_scatter(data,dex,seed):
     """
-    Return array x, randomly scattered by a log-normal distribution with sigma=dexscatter. 
+    Return array x, randomly scattered by a log-normal distribution with sigma=dexscatter.
     [via @tonyyli - https://github.com/dongwooc/imapper2]
     Note: scatter maintains mean in linear space (not log space).
     """
-    if (dex<=0):
+    if np.any(dex<=0):
         return data
     # Calculate random scalings
     sigma       = dex * 2.302585 # Stdev in log space (DIFFERENT from stdev in linear space), note: ln(10)=2.302585
     mu          = -0.5*sigma**2
 
-    # Set standard seed so changing minimum mass cut 
+    # Set standard seed so changing minimum mass cut
     # does not change the high mass halos
     np.random.seed(seed*13579)
     randscaling = np.random.lognormal(mu, sigma, data.shape)
