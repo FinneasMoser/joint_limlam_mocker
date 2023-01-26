@@ -68,7 +68,7 @@ def cull_peakpatch_catalogue(halos, min_mass, mapinst):
     dm = [(halos.M > min_mass) * (halos.redshift >= mapinst.z_i)
                                * (np.abs(halos.ra) <= mapinst.fov_x/2)
                                * (np.abs(halos.dec) <= mapinst.fov_y/2)
-                               * (halos.redshift <= mapinst.z_f)]
+                               * (halos.redshift <= mapinst.z_f)][0]
 
     for i in dir(halos):
         if i[0]=='_': continue
