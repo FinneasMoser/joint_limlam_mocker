@@ -158,7 +158,10 @@ def chi_to_redshift(chi, cosmo):
     zinterp = np.linspace(0,4,10000)
     dz      = zinterp[1]-zinterp[0]
 
-    chiinterp  = np.cumsum( drdz(zinterp,cosmo.h,cosmo.Omega_M) * dz)
+    try:
+        chiinterp  = np.cumsum( drdz(zinterp,cosmo.h,cosmo.Omega_M) * dz)
+    except AttributeError:
+        chiinterp = np.cumsum(drdz(zinterp, cosmo.h, cosmo.Om0) * dz)
     chiinterp -= chiinterp[0]
     z_of_chi   = sp.interpolate.interp1d(chiinterp,zinterp)
 
@@ -172,7 +175,10 @@ def redshift_to_chi(z, cosmo):
     zinterp = np.linspace(0,4,10000)
     dz      = zinterp[1]-zinterp[0]
 
-    chiinterp  = np.cumsum( drdz(zinterp,cosmo.h,cosmo.Omega_M) * dz)
+    try:
+        chiinterp  = np.cumsum( drdz(zinterp,cosmo.h,cosmo.Omega_M) * dz)
+    except AttributeError:
+        chiinterp = np.cumsum(drdz(zinterp, cosmo.h, cosmo.Om0) * dz)
     chiinterp -= chiinterp[0]
     chi_of_z   = sp.interpolate.interp1d(zinterp,chiinterp)
 
