@@ -21,9 +21,14 @@ def Mhalo_to_Ls(halos, params):
 
     # if no random number generator seed is set, give it one
     try:
-        seed = params.seed
+        seed = params.lum_uncert_seed
     except AttributeError:
-        params.seed = 12345
+        params.lum_uncert_seed = 12345
+
+    try:
+        scatterless = params.save_scatterless_lums
+    except AttributeError:
+        params.save_scatterless_lums = None
 
     # CO luminosities without the lognormal scatter
     halos.Lco, params = Mhalo_to_Lco(halos, params)
@@ -32,14 +37,20 @@ def Mhalo_to_Ls(halos, params):
     if params.catalog_model:
         halos.Lcat, params = Mhalo_to_Lcatalog(halos, params)
 
+        # for testing--save luminosity values directly from the model (no scatter)
+        if params.save_scatterless_lums:
+            halos.scatterless_Lco = copy.deepcopy(halos.Lco)
+            halos.scatterless_Lcat = copy.deepcopy(halos.Lcat)
+
         # joint scatter
-        halos = add_co_tracer_dependant_scatter(halos, params.rho, params.codex, params.catdex, params.seed)
+        halos = add_co_tracer_dependant_scatter(halos, params.rho, params.codex, params.catdex, params.lum_uncert_seed)
 
     else:
-        # co-only scatter
-        halos.Lco = add_log_normal_scatter(halos.Lco, params.codex, params.seed)
+        if params.save_scatterless_lums:
+            halos.scatterless_Lco = copy.deepcopy(halos.Lco)
 
-    return halos
+        # co-only scatter
+        halos.Lco = add_log_normal_scatter(halos.Lco, params.codex, params.lum_uncert_seed)
 
 
 
@@ -377,7 +388,8 @@ def Mhalo_to_Lcatalog(halos, params):
 
     model = params.catalog_model
 
-    dict = {'test1':          Mhalo_to_Lcatalog_test1,
+    dict = {'lya_chung':            Mhalo_to_LLya_Chung,
+            'default':          Mhalo_to_Lcatalog_test1,
             'test2':          Mhalo_to_Lcatalog_test2
             }
 
@@ -385,7 +397,47 @@ def Mhalo_to_Lcatalog(halos, params):
         return dict[model](halos, params)
 
     else:
-        sys.exit('\n\n\tYour model, '+model+', does not seem to exist\n\t\tPlease check src/halos_to_luminosity.py to add it\n\n')
+        sys.exit('\n\n\tYour model, '+model+', does not seem to exist\n\t\tPlease check src/halos_to_joint_luminosity.py to add it\n\n')
+
+def Mhalo_to_LLya_Chung(halos, params):
+    """
+    model to get Lya luminosities from halo SFR and redshift
+    based on Chung et al. 2019 (arXiv:1809.04550)
+    """
+
+    try:
+        coeffs = params.coeffs
+    except AttributeError:
+        coeffs = None 
+
+    # SFR scatter based on Tony Li 2016 model
+    sigma_sfr = 0.3
+
+    # this model doesn't have named coefficients yet, so will always use defaults
+    # ** edit to change that in future
+
+    # Get Star formation rate
+    if not hasattr(halos,'sfr'):
+        halos.sfr = Mhalo_to_sfr_Behroozi(halos, sigma_sfr);
+    
+    z = halos.redshift
+    sfr = halos.sfr
+
+    # escape fraction
+    fesc = (1+np.exp(-1.6*z + 5))**(-0.5) * (0.18 + 0.82 / (1 + 0.8*sfr**0.875))**2
+
+    # Llya in erg/s
+    Llya = 1.6e42 * sfr * fesc
+
+    # convert to Lsun
+    Llya = Llya / 3.826e33
+
+    # zero out NaNs
+    Llya[np.where(np.isnan(Llya))] = 0.0
+
+    params.catdex = 0. #**** this is just a placeholder
+
+    return Llya, params
 
 
 def Mhalo_to_Lcatalog_test1(halos, params):
