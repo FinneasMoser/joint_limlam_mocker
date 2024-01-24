@@ -38,6 +38,22 @@ def halos_to_hitmap(halos,mapinst,weights=None):
     return _ra_dec_nu_to_hitmap(halos.ra, halos.dec, halos.nu, mapinst,
                                     weights=weights)
 
+def co_cat_xspec(mapinst):
+    tco = mapinst.maps
+    tcat = mapinst.catmaps
+    Pk_3D = mapinst.fftsq_to_Pk*np.real(
+                np.fft.rfftn(tco)*np.conj(np.fft.rfftn(tcat)))
+    k = mapinst.k
+    kgrid = mapinst.kgrid
+    kbins = mapinst.kbins
+    Pk_nmodes = np.histogram(kgrid[kgrid>0],bins=kbins,weights=Pk_3D[kgrid>0])[0]
+    if hasattr(mapinst,'Nmodes'):
+        nmodes = mapinst.Nmodes
+    else:
+        nmodes = np.histogram(kgrid[kgrid>0],bins=kbins)[0]
+    Pk = Pk_nmodes/nmodes
+    return k,Pk,nmodes
+
 def map_to_xspec(mapinst,Pkvec=False):
     t = mapinst.maps
     hit = mapinst.hit

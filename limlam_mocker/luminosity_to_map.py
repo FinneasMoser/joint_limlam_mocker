@@ -47,7 +47,57 @@ def Lco_to_map(halos,map,units='temperature'):
     # flip back frequency bins
     return maps[:,:,::-1]
 
-def I_line(halos, map):
+@timeme
+def lums_to_map(halos,map,units='temperature'):
+    """
+    Converts Luminosity to brightness temperature
+    and bins into 3d intensity map data cube
+
+    Parameters
+    ----------
+    halos : class
+        Contains all halo information (position, redshift, etc..)
+    map : class
+       contains all information about the map that the halos will be binned into
+
+    Returns
+    -------
+    maps :
+        The 3D data cube of brightness temperature
+    """
+
+    ### Calculate line freq from redshift
+    halos.nu  = map.nu_rest/(halos.redshift+1)
+
+    # Transform from Luminosity to Temperature (uK)
+    # ... or to flux density (Jy/sr)
+    if (units=='intensity'):
+        if debug.verbose: print('\n\tcalculating halo intensities')
+        halos.Tco = I_line(halos, map)
+        halos.Tcat = I_line(halos, map, attribute='Lcat')
+    else:
+        if debug.verbose: print('\n\tcalculating halo temperatures')
+        halos.Tco = T_line(halos, map)
+        halos.Tcat = T_line(halos, map, attribute='Lcat')
+
+    # flip frequency bins because np.histogram needs increasing bins
+    bins3D = [map.pix_binedges_x, map.pix_binedges_y, map.nu_binedges[::-1]]
+
+    # bin in RA, DEC, NU_obs
+    if debug.verbose: print('\n\tBinning halos into map')
+    maps, edges = np.histogramdd( np.c_[halos.ra, halos.dec, halos.nu],
+                                  bins    = bins3D,
+                                  weights = halos.Tco )
+    catmaps, edges = np.histogramdd( np.c_[halos.ra, halos.dec, halos.nu],
+                                     bins    = bins3D,
+                                     weights = halos.Tcat )
+    if (units=='intensity'):
+        maps/= map.Ompix
+        catmaps/= map.Ompix 
+    # flip back frequency bins
+    return maps[:,:,::-1], catmaps[:,:,::-1]
+
+def I_line(halos, map, attribute='Lco'):
     '''
      calculates I_line = L_line/4/pi/D_L^2/dnu
      output units of Jy/sr
@@ -55,12 +105,13 @@ def I_line(halos, map):
 
      then 1 L_sun/Mpc**2/GHz = 4.0204e-2 Jy/sr
     '''
+    lum = getattr(halos, attribute)
     convfac = 4.0204e-2 # Jy/sr per Lsol/Mpc/Mpc/GHz
-    Ico     = convfac * halos.Lco/4/np.pi/halos.chi**2/(1+halos.redshift)**2/map.dnu
+    Ico     = convfac * lum/4/np.pi/halos.chi**2/(1+halos.redshift)**2/map.dnu
 
     return Ico
 
-def T_line(halos, map):
+def T_line(halos, map, attribute='Lco'):
     """
     The line Temperature in Rayleigh-Jeans limit
     T_line = c^2/2/kb/nuobs^2 * I_line
@@ -72,8 +123,9 @@ def T_line(halos, map):
         = [ 3.48e26 W/Mpc^2/GHz ] * [ 6.50966e21 s^2/K/kg ]
         = 2.63083e-6 K = 2.63083 muK
     """
+    lum = getattr(halos, attribute)
     convfac = 2.63083
-    Tco     = 1./2*convfac/halos.nu**2 * halos.Lco/4/np.pi/halos.chi**2/(1+halos.redshift)**2/map.dnu/map.Ompix
+    Tco     = 1./2*convfac/halos.nu**2 * lum/4/np.pi/halos.chi**2/(1+halos.redshift)**2/map.dnu/map.Ompix
 
     return Tco
 
