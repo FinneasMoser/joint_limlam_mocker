@@ -72,7 +72,6 @@ class HaloCatalog():
 
         assert np.max(self.M) < 1.e17,             "Halos seem too massive"
         assert np.max(self.redshift) < 4.,         "need to change max redshift interpolation in tools.py"
-        assert (cosmo.Omega_M + cosmo.Omega_L)==1., "Does not seem to be flat universe cosmology"
 
         if params.verbose: print('\n\t%d halos loaded' % self.nhalo)
 

@@ -158,6 +158,31 @@ def redshift_to_chi(z, cosmo):
 
     return chi_of_z(z)
 
+""" DOPPLER CONVERSIONS """
+def freq_to_z(nuem, nuobs):
+    """
+    returns a redshift given an observed and emitted frequency
+    """
+    zval = (nuem - nuobs) / nuobs
+    return zval
+
+def nuem_to_nuobs(nuem, z):
+    """
+    returns the frequency at which an emitted line at a given redshift would be
+    observed
+    """
+    nuobs = nuem / (1 + z)
+    return nuobs
+
+def nuobs_to_nuem(nuobs, z):
+    """
+    returns the frequency at which an observed line at a given redshift would have
+    been emitted
+    """
+    nuem = nuobs * (1 + z)
+    return nuem
+
+
 
 def plot_results(mapinst,k,Pk,Pk_sampleerr,params):
     """
