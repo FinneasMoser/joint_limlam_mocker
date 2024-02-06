@@ -90,6 +90,27 @@ def make_output_filenames(params, outputdir=None):
     params.plot_pspec_file = outputdir + '/pspec_' + params.model + '_' + seedname
     return
 
+### BESPOKE CLASSES
+class SimParameters():
+    """
+    simple Class used to hold all the parameters that commonly need to be passed between functions
+    """
+    def __init__(self):
+        pass
+
+    def copy(self):
+        """@brief Creates a copy of the table."""
+        return copy.deepcopy(self)
+
+    def print(self):
+        attrlist = []
+        for i in dir(self):
+            if i[0]=='_': continue
+            elif i == 'copy': continue
+            else: attrlist.append(i)
+        print(attrlist)
+
+
 def params_to_mapinst(params):
     """
     Adds input parameters to be kept by the map class and gets map details
