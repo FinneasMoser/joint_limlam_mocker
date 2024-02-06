@@ -60,6 +60,10 @@ class SimMap():
         """
         wrapper function for all forms of mock mapmaking from the generated
         luminosity catalog
+
+        most of this is stolen from the original limlam_mocker code:
+        Lco_to_map, Lco_to_map_doppler, etc.
+        only the CO beam stuff is actually added by me
         """
 
         ### Calculate line freq from redshift
@@ -294,28 +298,3 @@ def T_line(halos, map, attribute='Lco'):
     return Tco
 
 
-
-@timeme
-def save_halos(halocat, trim=None):
-    """
-    save 3D data cube in .npz format, including halocat header information
-    trim kwarg will keep only the N most massive halos when saving
-    """
-    if debug.verbose: print('\n\tSaving Halo Catalogue to\n\t\t',halocat.output_file)
-    if trim:
-        i = trim
-    else:
-        i = -1
-    np.savez(halocat.output_file,
-             dec=halocat.dec[:i], nhalo=len(halocat.dec[:i]),
-             nu=halocat.nu[:i], ra=halocat.ra[:i],
-             z=halocat.redshift[:i], vx=halocat.vx[:i],
-             vz    = halocat.vz[:i],
-             x_pos   = halocat.x_pos[:i],
-             y_pos = halocat.y_pos[:i],
-             z_pos        = halocat.z_pos[:i],
-             zformation=halocat.zformation[:i],
-             Lco = halocat.Lco[:i],
-             M = halocat.M[:i])
-
-    return
