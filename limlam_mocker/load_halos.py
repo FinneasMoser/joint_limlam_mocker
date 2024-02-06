@@ -3,6 +3,7 @@ import numpy as np
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u 
 import astropy.constants as const
+from scipy.ndimage import gaussian_filter1d, uniform_filter1d
 import copy
 from  .tools import *
 from . import debug
@@ -133,6 +134,8 @@ class HaloCatalog():
             # Calculate doppler parameters
             self.sin_i = np.sqrt(1-np.random.uniform(size=self.nhalo)**2)
             self.vbroaden = vvir(self.M, self.redshift)
+
+        params.filterfunc = gaussian_filter1d
 
         return self.vbroaden
     

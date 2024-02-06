@@ -40,7 +40,7 @@ parser.add_argument("-f",
 parser.add_argument("-v",
     "--verbose",
     type=str2bool,
-    default=False,
+    default=True,
     help="Enable verbose printing and turn off the terminal rewriting progress bar.")
 
 parser.add_argument(
