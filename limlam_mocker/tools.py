@@ -111,53 +111,6 @@ class SimParameters():
         print(attrlist)
 
 
-def params_to_mapinst(params):
-    """
-    Adds input parameters to be kept by the map class and gets map details
-
-    Returns
-    -------
-    map : class
-       contains all information about the map that the halos will be binned into
-    """
-    map             = empty_table() # creates empty class to put map info into
-
-    map.output_file = params.map_output_file
-
-    map.nmaps  = int(params.nmaps)
-    map.fov_x  = float(params.fov_x)
-    map.fov_y  = float(params.fov_y)
-    map.npix_x = int(params.npix_x)
-    map.npix_y = int(params.npix_y)
-    map.nu_i   = float(params.nu_i)
-    map.nu_f   = float(params.nu_f)
-    map.nu_rest= float(params.nu_rest)
-    map.z_i    = map.nu_rest/map.nu_i - 1
-    map.z_f    = map.nu_rest/map.nu_f - 1
-
-    # get arrays describing the final intensity map to be output
-    # map sky angle dimension
-    map.pix_size_x = map.fov_x/map.npix_x
-    map.pix_size_y = map.fov_y/map.npix_y
-
-    # pixel size to convert to brightness temp
-    map.Ompix = (map.pix_size_x*np.pi/180)*(map.pix_size_y*np.pi/180)
-
-    map.pix_binedges_x = np.linspace(-map.fov_x/2,map.fov_x/2,map.npix_x+1)
-    map.pix_binedges_y = np.linspace(-map.fov_y/2,map.fov_y/2,map.npix_y+1)
-
-    map.pix_bincents_x =  0.5*(map.pix_binedges_x[1:] + map.pix_binedges_x[:-1])
-    map.pix_bincents_y =  0.5*(map.pix_binedges_y[1:] + map.pix_binedges_y[:-1])
-
-    # map frequency dimension
-    # use linspace to ensure nmaps channels
-    map.nu_binedges = np.linspace(map.nu_i,map.nu_f,map.nmaps+1)
-    map.dnu         = np.abs(np.mean(np.diff(map.nu_binedges)))
-    map.nu_bincents = map.nu_binedges[:-1] - map.dnu/2
-
-    return map
-
-
 
 # Cosmology Functions
 # Explicitily defined here instead of using something like astropy
