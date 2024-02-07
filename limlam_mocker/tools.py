@@ -8,6 +8,8 @@ import scipy as sp
 import matplotlib.pyplot as plt
 import copy 
 
+from .param_argparser import *
+
 class empty_table():
     """
     simple Class creating an empty table
@@ -19,6 +21,33 @@ class empty_table():
     def copy(self):
         """@brief Creates a copy of the table."""
         return copy.copy(self)
+    
+
+### PARAMETER MANAGEMENT
+class SimParameters():
+    """
+    simple Class used to hold all the parameters that commonly need to be passed between functions
+    """
+    def __init__(self):
+        # read arguments in from argparser and store them in this (copyable, printable) class
+        pars = parser.parse_args()
+        param_dict = vars(pars)
+
+        for key, val in param_dict.items():
+            setattr(self, key, val)
+
+    def copy(self):
+        """@brief Creates a copy of the table."""
+        return copy.deepcopy(self)
+
+    def print(self):
+        attrlist = []
+        for i in dir(self):
+            if i[0]=='_': continue
+            elif i == 'copy': continue
+            else: attrlist.append(i)
+        print(attrlist)
+
 
 def write_time(string_in):
     """
@@ -89,27 +118,6 @@ def make_output_filenames(params, outputdir=None):
     params.plot_cube_file = outputdir + '/cube_' + params.model + '_' + seedname
     params.plot_pspec_file = outputdir + '/pspec_' + params.model + '_' + seedname
     return
-
-### BESPOKE CLASSES
-class SimParameters():
-    """
-    simple Class used to hold all the parameters that commonly need to be passed between functions
-    """
-    def __init__(self):
-        pass
-
-    def copy(self):
-        """@brief Creates a copy of the table."""
-        return copy.deepcopy(self)
-
-    def print(self):
-        attrlist = []
-        for i in dir(self):
-            if i[0]=='_': continue
-            elif i == 'copy': continue
-            else: attrlist.append(i)
-        print(attrlist)
-
 
 
 # Cosmology Functions
