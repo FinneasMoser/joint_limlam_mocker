@@ -1,15 +1,14 @@
 Limlam Mocker: A package for Line Intensity Mocks
 =================================================
 
-Limlam mocker is a barebones code to create line intensity maps from a given halo catalogue. 
-It only requires `NumPy <http://www.numpy.org/>`_ and `SciPy <http://www.scipy.org/>`_ - no special astronomy packages. Most was written in python 2, but python 3 should work as well.
+This is a fork of lumlam mocker, a barebones code to create line intensity maps from a given halo catalogue. It has been modified to generate halo luminosities for different tracers for the same set of halos, to smooth by a simulated telescope beam, and to automatically simulate astrophysical line broadening of the CO emission. 
 
 To Run
 ------
 
-all parameters are in ./params.py and are very self explanatory. Set them up as you wish and run with 
+parameters are mostly very self explanatory, and are set up with argparse. You can pass a parameter file with adjusted parameters using `-p` when running, or adjust the parameters directly in the code, as is shown in `lim_mocker.py`. To run the full code, use:
 
-        >>> ./lim_mocker.py
+        >>> ./lim_mocker.py -p ./limlam_mocker/param_example.txt
 
 
 This will load in the halo catalogue, assign luminosities to each halo, and bin them up into a 3D intensity map data cube of size (npix_x, npix_y, nmaps). This map will then be saved using the npz format - eg https://docs.scipy.org/doc/numpy-1.12.0/reference/generated/numpy.savez.html . This file contains all required info for the maps - field of view, pixel size, frequency of maps, etc...
@@ -18,28 +17,38 @@ A small sample halo catalogue is included, but many more of larger sizes are ava
 
 the basic workflow
 ------------------
-The example script provided in `lim_mocker.py` shows the basic workflow:
+The example script provided in `lim_mocker.py` shows the use of a wrapper function (`simgenerator`), but the more granular workflow is:
 
-- `import params` initialises the parameters for the mock map.
-- `load_peakpatch_catalogue` loads the halos from the lightcone specified.
-- `cull_peakpatch_catalogue` implements a mass and field of view cutoff.
-- `Mhalo_to_Lco` calculates luminosities for all halos.
-- `params_to_mapinst` generates the map instance from given parameters.
-- `Lco_to_map`  populates this map with flux (units of T) from the halos.
-- `save_maps` saves the maps to the npz file as described above.
+- `parser.parse_args` or `SimParameters` initialises the parameters for the mock map.
+- `HaloCatalog` loads the halos from the lightcone specified into a halo object and implements a mass and field of view cutoff.
+- `Mhalo_to_Ls` calculates luminosities for all halos in both tracers (calling `Mhalo_to_Lco` for the CO luminosities and `Mhalo_to_Lcatalog` for the other tracer luminosities).
+- `halos.get_velocities` generates the halo velocities used for astrophysical line broadening in the CO halos.
+- `SimMap` generates a map object from given parameters.
+- `map.mockmapmaker`  populates this map with flux (units of T) from the halos.
+- `map.write` saves the maps to the npz file as described above, and `halos.write_cat` saves the halo luminosities.
 - `map_to_pspec` then also calculates a 3D spherically averaged power spectrum for this map.
 
 To add your own L_CO(M,z,...) function
 --------------------------------------
-add it to halos_to_luminosity.py, following the ones already there eg:    
+add it to `halos_to_luminosity.py` (under `Mhalo_to_Lco`), following the ones already there eg:    
 
         >>> dict = {'Li':          Mhalo_to_Lco_Li,
         >>>        'Padmanabhan': Mhalo_to_Lco_Padmanabhan}
             
-        >>> def Mhalo_to_Lco_Li(halos, scatter):
+        >>> def Mhalo_to_Lco_Li(halos, coeffs):
         >>>        ...
 
 For testing, you could also make use of the 'arbitrary' model, but this is strongly discouraged, and adding new prescriptions to halos_to_luminosity.py is strongly encouraged.
+
+To add your own L_cat(M,z,...) function 
+---------------------------------------
+add it to halos_to_luminosity.py (under `Mhalo_to_Lcatalog`), following the ones already there eg:
+
+        >>> dict = {'schechter':          Mhalo_to_Lcatalog_schechter,
+        >>>        'newlya':              Mhalo_to_Lcatalog_newlya}
+            
+        >>> def Mhalo_to_Lcatalog_newlya(halos, params):
+        >>>        ...
 
 To add your own halo catalogue
 ------------------------------
