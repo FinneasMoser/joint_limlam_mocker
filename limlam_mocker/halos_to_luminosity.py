@@ -14,9 +14,9 @@ sfr_interp_tab = None
 def Mhalo_to_Ls(halos, params):
     """
     wrapper function to calculate the CO luminosities and (if required) tracer
-    luminosities for the full halo catalogue. returns a halo catalogue object
+    luminosities for the full halo catalog. returns a halo catalog object
     with two new values for each halo: Lco (the CO luminosity) and Lcat (the
-    luminosity of the catalogue tracer). pulls relavent model parameters out
+    luminosity of the catalog tracer). pulls relavent model parameters out
     of the params object
     """
 
@@ -35,7 +35,7 @@ def Mhalo_to_Ls(halos, params):
     halos.Lco = Mhalo_to_Lco(halos, params)
     print('done CO luminosities')
 
-    # catalogue luminosities
+    # catalog luminosities
     if params.catalog_model:
         halos.Lcat, params = Mhalo_to_Lcatalog(halos, params)
         print('done catalog luminosities')
@@ -567,7 +567,7 @@ def add_co_tracer_dependant_scatter(halos, rho, codex, catdex, seed):
     sigmaco = codex * 2.30285 # stdev in log space
     muco = -0.5*sigmaco**2
 
-    # parameters for the catalogue tracer distribution
+    # parameters for the catalog tracer distribution
     sigmatr = catdex * 2.30285
     mutr = -0.5*sigmatr**2
 
@@ -585,7 +585,7 @@ def add_co_tracer_dependant_scatter(halos, rho, codex, catdex, seed):
     logscaleco = np.exp(coscale*sigmaco + muco)
     logscaletr = np.exp(trscale*sigmatr + mutr)
 
-    # slap scalings onto existing catalogue and co luminosities
+    # slap scalings onto existing catalog and co luminosities
     halos.Lco = halos.Lco*logscaleco
     halos.Lcat = halos.Lcat*logscaletr
 

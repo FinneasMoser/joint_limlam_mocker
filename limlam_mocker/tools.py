@@ -13,7 +13,7 @@ from .param_argparser import *
 class empty_table():
     """
     simple Class creating an empty table
-    used for halo catalogue and map instances
+    used for halo catalog and map instances
     """
     def __init__(self):
         pass
@@ -110,7 +110,7 @@ def make_output_filenames(params, outputdir=None):
     if not os.path.exists(outputdir):
         os.makedirs(outputdir)
 
-    halofile = params.halo_catalogue_file
+    halofile = params.halo_catalog_file
     seedname = halofile[halofile.find('seed'):-4]
 
     params.map_output_file = outputdir + '/Lco_cube_' + params.model + '_' + seedname

@@ -11,7 +11,7 @@ from . import debug
 
 class HaloCatalog():
     """
-    designer class for holding a catalogue of simulated halos
+    designer class for holding a catalog of simulated halos
     """
 
     def __init__(self, params, inputfile=None, load_all=False):
@@ -27,7 +27,7 @@ class HaloCatalog():
     @timeme
     def load(self, filein, params):
         """
-        Load peak patch halo catalogue into halos class
+        Load peak patch halo catalog into halos class
 
         inputs
         -------
@@ -38,9 +38,9 @@ class HaloCatalog():
         """
 
         halo_info  = np.load(filein, allow_pickle=True)
-        if params.verbose: print("\thalo catalogue contains:\n\t\t", halo_info.files)
+        if params.verbose: print("\thalo catalog contains:\n\t\t", halo_info.files)
 
-        #get cosmology from halo catalogue
+        #get cosmology from halo catalog
         params_dict    = halo_info['cosmo_header'][()]
         Omega_M  = params_dict.get('Omega_M')
         Omega_B  = params_dict.get('Omega_B')
@@ -52,8 +52,8 @@ class HaloCatalog():
         self.ns = params_dict.get('ns')
         self.sigma8 = params_dict.get('sigma8')
 
-        cen_x_fov  = params_dict.get('cen_x_fov', 0.) #if the halo catalogue is not centered along the z axis
-        cen_y_fov  = params_dict.get('cen_y_fov', 0.) #if the halo catalogue is not centered along the z axis
+        cen_x_fov  = params_dict.get('cen_x_fov', 0.) #if the halo catalog is not centered along the z axis
+        cen_y_fov  = params_dict.get('cen_y_fov', 0.) #if the halo catalog is not centered along the z axis
 
         self.M          = halo_info['M']     # halo mass in Msun
         self.x_pos      = halo_info['x']     # halo x position in comoving Mpc
@@ -80,7 +80,7 @@ class HaloCatalog():
     @timeme
     def cull(self, params):
         """
-        crops the halo catalogue to only include desired halos (gets rid of those out of the 
+        crops the halo catalog to only include desired halos (gets rid of those out of the 
         redshift range, below the minimum mass, etc)
         """
 
@@ -139,16 +139,16 @@ class HaloCatalog():
 
         return self.vbroaden
     
-    #### FUNCTIONS TO SLICE THE HALO CATALOGUE IN SOME WAY
+    #### FUNCTIONS TO SLICE THE HALO catalog IN SOME WAY
     def indexcut(self, idx, in_place=False):
         """
-        crops the halo catalogue to only include halos included in the passed index
+        crops the halo catalog to only include halos included in the passed index
         array.
         """
         # assert np.max(idx) <= self.nhalo,   "Too many indices"
 
         if not in_place:
-            # new halos object to hold the cut catalogue
+            # new halos object to hold the cut catalog
             subset = self.copy()
 
             # copy all the arrays over, indexing as you go
@@ -177,7 +177,7 @@ class HaloCatalog():
 
     def attrcut_subset(self, attr, minval, maxval, params, in_place=False):
         """
-        crops the halo catalogue to only include desired halos, based on some arbitrary
+        crops the halo catalog to only include desired halos, based on some arbitrary
         attribute attr. will include haloes with attr from minval to maxval.
         """
 
@@ -185,7 +185,7 @@ class HaloCatalog():
                                           getattr(self,attr) <= maxval))[0]
 
         if not in_place:
-            # new halos object to hold the cut catalogue
+            # new halos object to hold the cut catalog
             subset = self.copy()
 
             # copy all the arrays over, indexing as you go
@@ -239,7 +239,7 @@ class HaloCatalog():
         """
         save halos as npz catalog
         """
-        if params.verbose: print('\n\tSaving Halo Catalogue to\n\t\t', params.cat_output_file)
+        if params.verbose: print('\n\tSaving Halo catalog to\n\t\t', params.cat_output_file)
         if trim:
             i = trim
         else:

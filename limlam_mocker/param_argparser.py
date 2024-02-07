@@ -44,10 +44,10 @@ parser.add_argument("-v",
     help="Enable verbose printing and turn off the terminal rewriting progress bar.")
 
 parser.add_argument(
-    "--halo_catalogue_file",
+    "--halo_catalog_file",
     type=str,
     default='/mn/stornext/d16/cmbco/comap/delaney/limlam_mocker/catalogues/COMAP_z2.39-3.44_1140Mpc_seed_13579.npz',
-    help="(SimGenerator) Path to peak-patch simulation catalogue. Default seed 13579."
+    help="(SimGenerator) Path to peak-patch simulation catalog. Default seed 13579."
 )
 
 parser.add_argument(
@@ -277,5 +277,5 @@ parser.add_argument(
     "--cat_output_file_name",
     type=str,
     default='sim_cat.npz',
-    help="(SimGenerator) File name for the final simulated catalogue (.npz). Default sim_cat.npz" #*****
+    help="(SimGenerator) File name for the final simulated catalog (.npz). Default sim_cat.npz" #*****
 )

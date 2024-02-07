@@ -1,4 +1,4 @@
---halo_catalogue_file /home/deedunne/Documents/COMAP/limlam_mocker_auxcode/peakpatch_catalogues/0/COMAP_z2.39-3.44_1140Mpc_seed_13579.npz
+--halo_catalog_file /home/deedunne/Documents/COMAP/limlam_mocker_auxcode/peakpatch_catalogues/0/COMAP_z2.39-3.44_1140Mpc_seed_13579.npz
 --catalog_model schechter 
 --catalog_coeffs [0.849e43, 3.9e-4, -1.8, 39, 45]
 --output_dir /home/deedunne/Documents/COMAP/limlam_mocker_auxcode/tester

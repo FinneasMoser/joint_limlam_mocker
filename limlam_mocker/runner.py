@@ -24,7 +24,7 @@ def simgenerator(params):
     """
 
     # generate the halo catalog from the passed peak-patch catalog
-    halos = HaloCatalog(params, params.halo_catalogue_file)
+    halos = HaloCatalog(params, params.halo_catalog_file)
 
     # generate luminosities for each halo
     Mhalo_to_Ls(halos, params)
