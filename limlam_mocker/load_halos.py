@@ -76,6 +76,21 @@ class HaloCatalog():
 
         if params.verbose: print('\n\t%d halos loaded' % self.nhalo)
 
+    @timeme 
+    def load_luminosities(self, inputfile, params):
+        """
+        load in halo luminosities generated in a previous run of the code
+        #*** need to store more metainfo so these match
+        """
+        with np.load(inputfile) as file:
+            # test to make sure that at least the lengths of the arrays are the same
+            assert params.nhalo == len(file['Lco']),    "Number of halos in the file doesn't match positions"
+
+            self.Lco = file['Lco']
+            self.Lcat = file['Lcat']
+            if file['vhalo'][0] > 0:
+                self.vbroaden = file['vhalo']
+
 
     @timeme
     def cull(self, params):
