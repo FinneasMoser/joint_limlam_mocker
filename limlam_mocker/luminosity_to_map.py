@@ -1,3 +1,4 @@
+
 from __future__ import absolute_import, print_function
 import numpy as np
 import os
@@ -14,7 +15,14 @@ class SimMap():
     """
     designer class to hold the simulated maps and their metadata
     """
-    def __init__(self, params):
+    def __init__(self, params, inputfile=None):
+        if inputfile:
+            self.from_file(inputfile, params)
+        else:
+            self.setup_empty(params)
+
+
+    def setup_empty(self, params):
         """
         Adds input parameters to be kept by the map class and gets map details
         (this is just params_to_mapinst from the og limlam_mocker)
@@ -50,6 +58,48 @@ class SimMap():
         self.nu_binedges = np.linspace(self.nu_i,self.nu_f,self.nmaps+1)
         self.dnu         = np.abs(np.mean(np.diff(self.nu_binedges)))
         self.nu_bincents = self.nu_binedges[:-1] - self.dnu/2
+
+        return 
+
+    def from_file(self, inputfile, params):
+        """
+        load in map object from a file previously saved by this code
+        """
+        
+        # parameters saved in the code
+        with np.load(inputfile) as f:
+            self.fov_x = float(f['fov_x'])
+            self.fov_y = float(f['fov_y'])
+            self.pix_size_x = float(f['pix_size_x'])
+            self.pix_size_y = float(f['pix_size_y'])
+            self.npix_x = int(f['npix_x'])
+            self.npix_y = int(f['npix_y'])
+            self.pix_bincents_x = f['map_pixel_ra']
+            self.pix_bincents_y = f['map_pixel_dec']
+            self.nu_bincents = f['map_frequencies']
+            self.map = f['map_cube']
+            self.catmap = f['cat_cube']
+            self.hit = f['cat_hits']
+
+        # other map metadata from params object
+        self.nu_i   = float(params.nu_i)
+        self.nu_f   = float(params.nu_f)
+        self.nu_rest= float(params.nu_rest)
+        self.nmaps = params.nmaps
+        self.z_i    = self.nu_rest/self.nu_i - 1
+        self.z_f    = self.nu_rest/self.nu_f - 1
+
+        self.nu_binedges = np.linspace(self.nu_i,self.nu_f,self.nmaps+1)
+        self.dnu         = np.abs(np.mean(np.diff(self.nu_binedges)))
+
+        # pixel size to convert to brightness temp
+        self.Ompix = (self.pix_size_x*np.pi/180)*(self.pix_size_y*np.pi/180)
+
+        # other way of binning pixels 
+        self.pix_binedges_x = np.linspace(-self.fov_x/2,self.fov_x/2,self.npix_x+1)
+        self.pix_binedges_y = np.linspace(-self.fov_y/2,self.fov_y/2,self.npix_y+1)
+
+        return
 
 
     def copy(self):
