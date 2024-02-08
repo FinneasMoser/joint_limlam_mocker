@@ -1,4 +1,5 @@
 import argparse 
+import ast
 
 
 class LoadFromFile(argparse.Action):
@@ -22,6 +23,12 @@ def str2bool(v):
         return False
     else:
         raise argparse.ArgumentTypeError("Boolean value expected.")
+    
+def str2list(v):
+    """
+    enables lists to be read in as actual lists
+    """
+    return ast.literal_eval(v)
     
 parser = argparse.ArgumentParser()
 
@@ -73,7 +80,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--model_coeffs",
-    type=list,
+    type=str2list,
     default=None,
     help="(SimGenerator) Adjusted model coefficients. If 'None', default values for the model are used."
 )
