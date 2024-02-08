@@ -203,7 +203,7 @@ def nuobs_to_nuem(nuobs, z):
 ### LUMINOSITY AND MASS FUNCTIONS
 def log_lum_func(halos, mapinst, params, attribute='Lcat', lumrange=None, nbins=500, unit=u.erg/u.s):
     """
-    calculates a luminosity function in logspace
+    calculates a luminosity function in logspace from a halo catalog
     ------
     INPUTS
     ------
@@ -246,13 +246,13 @@ def log_lum_func(halos, mapinst, params, attribute='Lcat', lumrange=None, nbins=
     dL = np.diff(bins)
     
     # number density / lum density
-    hist = counts / mapinst.totalcovol.value / dL
+    hist = counts / mapinst.totalcovol.value
     # x axis
     bincents = bins[:-1] + dL / 2
     bincents = 10**bincents * const.L_sun.to(unit)
     
     # cumulative
-    cumhist = np.flip(np.cumsum(np.flip(hist))) * dL
+    cumhist = np.flip(np.cumsum(np.flip(hist)))
     
     return (bincents, cumhist)
 

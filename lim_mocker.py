@@ -6,7 +6,7 @@ import limlam_mocker      as llm
 
 
 # get parameters for run
-params = llm.parser.parse_args()
+params = llm.SimParameters()
 
 # adjust any parameters you'd like (or pass a parameter file with -p when running)
 params.halo_catalog_file = '/home/deedunne/Documents/COMAP/limlam_mocker_auxcode/peakpatch_catalogues/0/COMAP_z2.39-3.44_1140Mpc_seed_13587.npz'
