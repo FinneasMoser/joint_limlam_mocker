@@ -59,6 +59,18 @@ class SimMap():
         self.dnu         = np.abs(np.mean(np.diff(self.nu_binedges)))
         self.nu_bincents = self.nu_binedges[:-1] - self.dnu/2
 
+        # get full map volume
+        x,y,z = self.pix_binedges_x, self.pix_binedges_y, self.nu_binedges
+        zco = params.cosmo.comoving_distance(self.nu_rest/z-1)
+        # assume comoving transverse distance = comoving distance
+        #     (i.e. no curvature)
+        avg_ctd = np.mean(zco)
+        xco = x/(180)*np.pi*avg_ctd
+        yco = y/(180)*np.pi*avg_ctd
+        dxco, dyco, dzco = [np.abs(np.mean(np.diff(d))) for d in (xco, yco, zco)]
+        self.voxcovol = dxco*dyco*dzco
+        self.totalcovol = np.ptp(xco)*np.ptp(yco)*np.ptp(zco)
+
         return 
 
     def from_file(self, inputfile, params):
@@ -98,6 +110,18 @@ class SimMap():
         # other way of binning pixels 
         self.pix_binedges_x = np.linspace(-self.fov_x/2,self.fov_x/2,self.npix_x+1)
         self.pix_binedges_y = np.linspace(-self.fov_y/2,self.fov_y/2,self.npix_y+1)
+
+        # get full map volume
+        x,y,z = self.pix_binedges_x, self.pix_binedges_y, self.nu_binedges
+        zco = params.cosmo.comoving_distance(self.nu_rest/z-1)
+        # assume comoving transverse distance = comoving distance
+        #     (i.e. no curvature)
+        avg_ctd = np.mean(zco)
+        xco = x/(180)*np.pi*avg_ctd
+        yco = y/(180)*np.pi*avg_ctd
+        dxco, dyco, dzco = [np.abs(np.mean(np.diff(d))) for d in (xco, yco, zco)]
+        self.voxcovol = dxco*dyco*dzco
+        self.totalcovol = np.ptp(xco)*np.ptp(yco)*np.ptp(zco)
 
         return
 

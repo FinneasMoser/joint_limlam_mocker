@@ -7,6 +7,8 @@ import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
 import copy 
+from astropy.cosmology import FlatLambdaCDM
+import astropy.units as u
 
 from .param_argparser import *
 
@@ -35,6 +37,13 @@ class SimParameters():
 
         for key, val in param_dict.items():
             setattr(self, key, val)
+
+        # set up cosmology object in params
+        if self.cosmology == 'comap':
+            self.cosmo = FlatLambdaCDM(H0=70*u.km / (u.Mpc*u.s), Om0=0.286, Ob0=0.047)
+        else:
+            assert self.cosmology != 'comap', "Don't recognize this cosmology"
+    
 
     def copy(self):
         """@brief Creates a copy of the table."""
@@ -190,6 +199,62 @@ def nuobs_to_nuem(nuobs, z):
     nuem = nuobs * (1 + z)
     return nuem
 
+
+### LUMINOSITY AND MASS FUNCTIONS
+def log_lum_func(halos, mapinst, params, attribute='Lcat', lumrange=None, nbins=500, unit=u.erg/u.s):
+    """
+    calculates a luminosity function in logspace
+    ------
+    INPUTS
+    ------
+        halos: 
+            (HaloCatalog) the halos object containing the luminosities
+        mapinst:
+            (SimMap) map object (for total volume of the sim) ****this could be better
+        params:
+            (SimParameters) parameters object *****
+        attribute:
+            (string, default 'Lcat') which luminosities to get the luminosity function from
+        lumrange:
+            (tuple, default None) the (log) luminsoities to calculate the luminosity function between
+        nbins:
+            (int, default 500) the number of bins to use when histogramming
+        unit:
+            (astropy.units object, default erg/s) the unit to return the x axis in
+    -------
+    OUTPUTS
+    -------
+        bincents:
+            (array) the x-axis, centers of the numpy histogram bins
+        cumhist:
+            (array) the luminosity function y-axis
+
+    """
+    
+    # get logarithmic luminosities, deal with inf values (from zero SFR if using Chung model)
+    loglyalums = np.log10(getattr(halos, attribute))
+    infidx = np.where(np.isinf(loglyalums))
+    noninfidx = np.where(~np.isinf(loglyalums))
+    loglyalums[infidx] = 0.
+    
+    if not lumrange:
+        # find lims of the nonzero luminosities
+        lumrange = (np.nanmin(loglyalums[noninfidx]), np.nanmax(loglyalums[noninfidx]))
+    
+    # histogram them up
+    counts, bins = np.histogram(loglyalums, bins=nbins, range=lumrange)
+    dL = np.diff(bins)
+    
+    # number density / lum density
+    hist = counts / mapinst.totalcovol.value / dL
+    # x axis
+    bincents = bins[:-1] + dL / 2
+    bincents = 10**bincents * const.L_sun.to(unit)
+    
+    # cumulative
+    cumhist = np.flip(np.cumsum(np.flip(hist))) * dL
+    
+    return (bincents, cumhist)
 
 
 def plot_results(mapinst,k,Pk,Pk_sampleerr,params):

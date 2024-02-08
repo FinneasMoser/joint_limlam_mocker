@@ -46,7 +46,7 @@ parser.add_argument("-v",
 parser.add_argument(
     "--halo_catalog_file",
     type=str,
-    default='/mn/stornext/d16/cmbco/comap/delaney/limlam_mocker/catalogues/COMAP_z2.39-3.44_1140Mpc_seed_13579.npz',
+    default='/home/deedunne/Documents/COMAP/limlam_mocker_auxcode/peakpatch_catalogues/0/COMAP_z2.39-3.44_1140Mpc_seed_13587.npz',
     help="(SimGenerator) Path to peak-patch simulation catalog. Default seed 13579."
 )
 
