@@ -43,6 +43,10 @@ class SimParameters():
             self.cosmo = FlatLambdaCDM(H0=70*u.km / (u.Mpc*u.s), Om0=0.286, Ob0=0.047)
         else:
             assert self.cosmology != 'comap', "Don't recognize this cosmology"
+
+        # other calculated metainfo
+        self.z_i    = self.nu_rest/self.nu_i - 1
+        self.z_f    = self.nu_rest/self.nu_f - 1
     
 
     def copy(self):
