@@ -84,7 +84,7 @@ class HaloCatalog():
         """
         with np.load(inputfile) as file:
             # test to make sure that at least the lengths of the arrays are the same
-            assert params.nhalo == len(file['Lco']),    "Number of halos in the file doesn't match positions"
+            assert self.nhalo == len(file['Lco']),    "Number of halos in the file doesn't match positions"
 
             self.Lco = file['Lco']
             self.Lcat = file['Lcat']

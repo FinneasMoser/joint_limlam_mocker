@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import copy 
 from astropy.cosmology import FlatLambdaCDM
 import astropy.units as u
+import astropy.constants as const
 
 from .param_argparser import *
 
