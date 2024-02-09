@@ -6,9 +6,9 @@ def _ra_dec_nu_to_hitmap(ra,dec,nu,mapinst,weights=None):
                     mapinst.nu_binedges[::-1]), weights=weights )
     return hitmaps[:,:,::-1]
 
-def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1):
+def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1,logscale=False):
     x,y,z = mapinst.pix_binedges_x, mapinst.pix_binedges_y, mapinst.nu_binedges
-    zco = redshift_to_chi(mapinst.nu_rest/z-1)
+    zco = redshift_to_chi(mapinst.nu_rest/z-1).value
     # assume comoving transverse distance = comoving distance
     #     (i.e. no curvature)
     avg_ctd = np.mean(zco)
@@ -24,8 +24,14 @@ def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1):
     kgrid = np.sqrt(sum(ki**2 for ki in mapinst.kvec))
     dk = max(np.diff(kx)[0],np.diff(ky)[0],np.diff(kz)[0])*dk_scale
     kmax_dk = int(np.ceil(max(np.amax(kx),np.amax(ky),np.amax(kz))/dk))
-    kbins = np.linspace(0,kmax_dk*dk,kmax_dk+1)
+    # bin EDGES
+    if not logscale:
+        kbins = np.linspace(0,kmax_dk*dk,kmax_dk+1)
+    else:
+        kbins = np.logspace(-1.39, np.log10(kmax_dk*dk),kmax_dk+1)
     Nmodes = np.histogram(kgrid[kgrid>0],bins=kbins)[0]
+    
+    # bin CENTERS
     k = (kbins[1:]+kbins[:-1])/2
     fftsq_to_Pk=(dxco*dyco*dzco)**2/np.abs(np.ptp(xco)*np.ptp(yco)*np.ptp(zco))
     mapinst.k = k

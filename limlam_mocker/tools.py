@@ -259,7 +259,7 @@ def log_lum_func(halos, mapinst, params, attribute='Lcat', lumrange=None, nbins=
     # cumulative
     cumhist = np.flip(np.cumsum(np.flip(hist)))
     
-    return (bincents, cumhist)
+    return (bincents.value, cumhist)
 
 
 def plot_results(mapinst,k,Pk,Pk_sampleerr,params):
