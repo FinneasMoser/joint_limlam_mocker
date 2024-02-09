@@ -58,6 +58,9 @@ def co_cat_xspec(mapinst):
     else:
         nmodes = np.histogram(kgrid[kgrid>0],bins=kbins)[0]
     Pk = Pk_nmodes/nmodes
+    #***
+    # Pkvolcorr = Pk / mapinst.totalcovol
+    
     return k,Pk,nmodes
 
 def map_to_xspec(mapinst,Pkvec=False):
@@ -79,8 +82,8 @@ def map_to_xspec(mapinst,Pkvec=False):
     else:
         return k,Pk,nmodes
 
-def map_to_linespec(mapinst,Pkvec=False):
-    t = mapinst.maps
+def map_to_linespec(mapinst,Pkvec=False,attribute='maps'):
+    t = getattr(mapinst, attribute)
     Pk_3D = mapinst.fftsq_to_Pk*np.abs(np.fft.rfftn(t))**2
     k = mapinst.k
     kgrid = mapinst.kgrid
@@ -91,6 +94,7 @@ def map_to_linespec(mapinst,Pkvec=False):
     else:
         nmodes = np.histogram(kgrid[kgrid>0],bins=kbins)[0]
     Pk = Pk_nmodes/nmodes
+    
     if Pkvec:
         return k,Pk,nmodes,Pk_3D
     else:
