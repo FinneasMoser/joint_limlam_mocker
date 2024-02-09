@@ -82,7 +82,7 @@ def map_to_xspec(mapinst,Pkvec=False):
     else:
         return k,Pk,nmodes
 
-def map_to_linespec(mapinst,Pkvec=False,attribute='maps'):
+def map_to_linespec(mapinst,Pkvec=False,attribute='map'):
     t = getattr(mapinst, attribute)
     Pk_3D = mapinst.fftsq_to_Pk*np.abs(np.fft.rfftn(t))**2
     k = mapinst.k
