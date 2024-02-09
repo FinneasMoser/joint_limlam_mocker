@@ -45,8 +45,8 @@ def halos_to_hitmap(halos,mapinst,weights=None):
                                     weights=weights)
 
 def co_cat_xspec(mapinst):
-    tco = mapinst.maps
-    tcat = mapinst.catmaps
+    tco = mapinst.map
+    tcat = mapinst.catmap
     Pk_3D = mapinst.fftsq_to_Pk*np.real(
                 np.fft.rfftn(tco)*np.conj(np.fft.rfftn(tcat)))
     k = mapinst.k
@@ -64,7 +64,7 @@ def co_cat_xspec(mapinst):
     return k,Pk,nmodes
 
 def map_to_xspec(mapinst,Pkvec=False):
-    t = mapinst.maps
+    t = mapinst.map
     hit = mapinst.hit
     Pk_3D = mapinst.fftsq_to_Pk*np.real(
                 np.fft.rfftn(t)*np.conj(np.fft.rfftn(hit)))
