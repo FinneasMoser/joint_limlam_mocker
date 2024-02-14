@@ -39,6 +39,9 @@ def simgenerator(params):
     # make the map
     map.mockmapmaker(halos, params)
 
+    # cut catalog based on observability
+    halos.attrcut_subset('Lcat', params.lcat_cutoff, np.nanmax(halos.Lcat)+10, params, in_place=True)
+
     # output files for map and catalog
     params.map_output_file = params.output_dir + '/sim_map.npz'
     params.cat_output_file = params.output_dir + '/sim_cat.npz'

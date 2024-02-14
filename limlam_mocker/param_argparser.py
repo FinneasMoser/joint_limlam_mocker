@@ -218,6 +218,14 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--save_hits",
+    type=str2bool,
+    default=True,
+    help="(SimGenerator) Save the galaxy catalog as a hit map in the mapfile. Defaults to True."
+)
+
+### CO INSTRUMENT MODIFIERS
+parser.add_argument(
     "--beambroaden",
     type=str2bool,
     default=True,
@@ -257,6 +265,15 @@ parser.add_argument(
     type=str,
     default='vvirincli',
     help="(SimGenerator) Which type of per-halo velocity (stored as an attribute) to use when broadening. Default 'vvirincli'."
+)
+
+### CATALOG INSTRUMENT MODIFIERS
+parser.add_argument(
+    "--lcat_cutoff",
+    type=float,
+    default=0.,
+    help="(SimGenerator) Lowest catalog luminosity to include in catalog files and hitmaps. Defaults to zero."
+
 )
 
 parser.add_argument(
