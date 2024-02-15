@@ -100,8 +100,8 @@ def map_to_linespec(mapinst,Pkvec=False,attribute='map'):
     else:
         return k,Pk,nmodes
 
-def map_to_galspec(mapinst,Pkvec=False):
-    hit = mapinst.hit
+def map_to_galspec(mapinst,Pkvec=False,attribute='hit'):
+    hit = getattr(mapinst, attribute)
     Pk_3D = mapinst.fftsq_to_Pk*np.abs(np.fft.rfftn(hit))**2
     k = mapinst.k
     kgrid = mapinst.kgrid
