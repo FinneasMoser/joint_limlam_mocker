@@ -224,6 +224,13 @@ parser.add_argument(
     help="(SimGenerator) Save the galaxy catalog as a hit map in the mapfile. Defaults to True."
 )
 
+parser.add_argument(
+    "--weight_hits",
+    type=str2bool,
+    default=False,
+    help="(SimGenerator) weight the hit map by catalog luminosities. Defaults to False."
+)
+
 ### CO INSTRUMENT MODIFIERS
 parser.add_argument(
     "--beambroaden",
@@ -273,7 +280,6 @@ parser.add_argument(
     type=float,
     default=0.,
     help="(SimGenerator) Lowest catalog luminosity to include in catalog files and hitmaps. Defaults to zero."
-
 )
 
 parser.add_argument(
