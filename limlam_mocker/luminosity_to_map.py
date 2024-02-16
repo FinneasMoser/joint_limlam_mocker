@@ -142,7 +142,11 @@ class SimMap():
 
         ### Calculate line freq from redshift
         halos.nu  = self.nu_rest/(halos.redshift+1)
-        halos.nucat = self.nu_rest/(halos.zcat+1)
+        try:
+            halos.nucat = self.nu_rest/(halos.zcat+1)
+        except AttributeError:
+            halos.offset_velocities(params)
+            halos.nucat = self.nu_rest/(halos.zcat+1)
 
         # Transform from Luminosity to Temperature (uK)
         # ... or to flux density (Jy/sr)
@@ -313,6 +317,28 @@ class SimMap():
                 catmaps/= self.Ompix 
             # flip back frequency bins
             self.catmap = catmaps[:,:,::-1]
+
+        if params.add_comap_noise:
+            self.add_random_comap_noise(params)
+
+    def add_random_comap_noise(self, params):
+        """
+        add randomly-generated noise to the CO map
+        uses:
+            params.noise_int_time: integration time in hours to simulate (radiometer) noise
+            params.noise_seed: seed for the random number generator
+        """
+
+        # calculate the noise level from the integration time
+        sigma = 44 / np.sqrt(2*19*params.noise_int_time*3600*self.dnu)
+
+        # generate noise map
+        rng = np.random.default_rng(params.noise_seed)
+        noise = rng.normal(loc=0., scale=sigma, size=self.map.shape)
+
+        # add it in
+        self.map = self.map + noise
+
 
     @timeme
     def write(self, params):

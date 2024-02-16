@@ -231,7 +231,7 @@ parser.add_argument(
     help="(SimGenerator) weight the hit map by catalog luminosities. Defaults to False."
 )
 
-### CO INSTRUMENT MODIFIERS
+### CO INSTRUMENT/ASTROPHYSICS MODIFIERS
 parser.add_argument(
     "--beambroaden",
     type=str2bool,
@@ -272,6 +272,27 @@ parser.add_argument(
     type=str,
     default='vvirincli',
     help="(SimGenerator) Which type of per-halo velocity (stored as an attribute) to use when broadening. Default 'vvirincli'."
+)
+
+parser.add_argument(
+    "--add_comap_noise",
+    type=str2bool,
+    default=False,
+    help="(SimGenerator) Quick and dirty way to add in a white noise approximation of COMAP noise. Defaults to False."
+)
+
+parser.add_argument(
+    "--noise_int_time",
+    type=float,
+    default=303.7,
+    help="(SimGenerator) Integration time in hours used to calculate random radiometer noise. Default is 303.7 (Field 1, Season 1)."
+)
+
+parser.add_argument(
+    "--noise_seed",
+    type=int,
+    default=12345,
+    help="(SimGenerator) RNG seed for generating COMAP radiometer noise. Default is 12345."
 )
 
 ### CATALOG INSTRUMENT/ASTROPHYSICS MODIFIERS
