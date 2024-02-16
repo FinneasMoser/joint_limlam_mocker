@@ -142,6 +142,7 @@ class SimMap():
 
         ### Calculate line freq from redshift
         halos.nu  = self.nu_rest/(halos.redshift+1)
+        halos.nucat = self.nu_rest/(halos.zcat+1)
 
         # Transform from Luminosity to Temperature (uK)
         # ... or to flux density (Jy/sr)
@@ -305,7 +306,7 @@ class SimMap():
 
             # bin in RA, DEC, NU_obs
             if params.verbose: print('\n\tBinning catalog halos into map')
-            catmaps, edges = np.histogramdd( np.c_[halos.ra, halos.dec, halos.nu],
+            catmaps, edges = np.histogramdd( np.c_[halos.ra, halos.dec, halos.nucat],
                                              bins    = bins3D,
                                              weights = halos.Tcat )
             if (params.units=='intensity'):

@@ -41,7 +41,7 @@ def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1,logscale=False):
     mapinst.fftsq_to_Pk = fftsq_to_Pk
     
 def halos_to_hitmap(halos,mapinst,weights=None):
-    return _ra_dec_nu_to_hitmap(halos.ra, halos.dec, halos.nu, mapinst,
+    return _ra_dec_nu_to_hitmap(halos.ra, halos.dec, halos.nucat, mapinst,
                                     weights=weights)
 
 def co_cat_xspec(mapinst):

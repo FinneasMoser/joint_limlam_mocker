@@ -127,6 +127,7 @@ class HaloCatalog():
         sortidx = np.argsort(self.M)[::-1]
         self.indexcut(sortidx, in_place=True)
 
+    ### MESS WITH THE OBSERVATIONAL PROPERTIES OF THE CATALOG
     def get_velocities(self, params):
         """
         assigns each halo a rotation velocity based on its DM mass
@@ -153,6 +154,32 @@ class HaloCatalog():
         params.filterfunc = gaussian_filter1d
 
         return self.vbroaden
+    
+    def offset_velocities(self, params):
+        """
+        offsets the catalog from the CO in redshift by some velocities. 
+        uses
+            params.vcat_offset: mean offset (in km/s)
+            params.vcat_scatter: scatter in the mean offset (in km/s)
+        saves
+            self.zcat: new catalog redshifts 
+        """
+
+        # velocity offsets with scatter 
+        rng = np.random.default_rng(seed=params.vcat_seed)
+        dv = rng.normal(loc=params.vcat_offset, scale=params.vcat_scatter, size=len(self.Lcat))
+
+        # peculiar velocity redshift contribution
+        dv_c = dv / const.c.to(u.km/u.s).value
+        zpec = np.sqrt((1+dv_c) / (1-dv_c)) - 1
+
+        # observed redshift
+        zobs = (1+self.redshift)*(1+zpec) - 1
+
+        # save in object
+        self.zcat = zobs
+
+
     
     #### FUNCTIONS TO SLICE THE HALO catalog IN SOME WAY
     def indexcut(self, idx, in_place=False):

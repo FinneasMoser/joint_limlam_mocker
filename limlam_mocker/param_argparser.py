@@ -274,12 +274,33 @@ parser.add_argument(
     help="(SimGenerator) Which type of per-halo velocity (stored as an attribute) to use when broadening. Default 'vvirincli'."
 )
 
-### CATALOG INSTRUMENT MODIFIERS
+### CATALOG INSTRUMENT/ASTROPHYSICS MODIFIERS
 parser.add_argument(
     "--lcat_cutoff",
     type=float,
     default=0.,
     help="(SimGenerator) Lowest catalog luminosity to include in catalog files and hitmaps. Defaults to zero."
+)
+
+parser.add_argument(
+    "--vcat_offset",
+    type=float,
+    default=0.,
+    help="(SimGenerator) Offset the catalog redshifts by some mean velocity (in km/s). Defaults to 0."
+)
+
+parser.add_argument(
+    "--vcat_scatter",
+    type=float,
+    default=0.,
+    help="(SimGenerator) (Gaussian STD) of the scatter in the catalog velocity offset (in km/s). Defaults to zero."
+)
+
+parser.add_argument(
+    "--vcat_seed",
+    type=int,
+    default=12345,
+    help="(SimGenerator) Random seed to use when generating catalog velocity offsets."
 )
 
 parser.add_argument(
