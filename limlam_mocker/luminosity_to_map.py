@@ -320,21 +320,26 @@ class SimMap():
 
         if params.add_comap_noise:
             self.add_random_comap_noise(params)
+            if params.verbose:
+                print('\nAdding COMAP radiometer noise with {} hr integration time'.format(params.noise_int_time))
 
     def add_random_comap_noise(self, params):
         """
-        add randomly-generated noise to the CO map
+        quick and dirty way to add randomly-generated noise (in uK) to the CO map 
         uses:
             params.noise_int_time: integration time in hours to simulate (radiometer) noise
             params.noise_seed: seed for the random number generator
+        creates:
+            self.mapnoise: noise map in uK (just subtract it off the map to get the signal-only cube again)
         """
 
         # calculate the noise level from the integration time
-        sigma = 44 / np.sqrt(2*19*params.noise_int_time*3600*self.dnu)
+        sigma = 44*1e6 / np.sqrt(2*19*params.noise_int_time*3600*self.dnu)
 
         # generate noise map
         rng = np.random.default_rng(params.noise_seed)
         noise = rng.normal(loc=0., scale=sigma, size=self.map.shape)
+        self.mapnoise = noise
 
         # add it in
         self.map = self.map + noise
