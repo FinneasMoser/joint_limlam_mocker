@@ -179,6 +179,25 @@ class HaloCatalog():
         # save in object
         self.zcat = zobs
 
+    def observation_cull(self, params):
+        """
+        cuts the catalog by observational parameters: cuts to only objects above a certain luminosity
+        and then randomly selects N objects from that cut list.
+        uses:
+            params.lcat_cutoff: the lower limit on catalog luminosity to include (in Lsun)
+            params.goal_nobj: number of catalog objects to include once the cut is made
+            params.vcat_seed: rng seed (using the velocity one)
+        """
+
+        # cut by luminosity
+        self.attrcut_subset('Lcat', params.lcat_cutoff, np.nanmax(self.Lcat)+10, params, in_place=True)
+
+        if params.goal_nobj > 0:
+            # select nobj random objects from the leftover catalog
+            rng = np.random.default_rng(params.vcat_seed)
+            keepidx = rng.choice(self.nhalo, params.goal_nobj, replace=False)
+            # cut to these objects
+            self.indexcut(keepidx, in_place=True)
 
     
     #### FUNCTIONS TO SLICE THE HALO catalog IN SOME WAY

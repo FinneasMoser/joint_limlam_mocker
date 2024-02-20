@@ -304,6 +304,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--goal_nobj",
+    type=int,
+    default=-99,
+    help="(SimGenerator) Number of catalog objects to keep for stats. If negative, includes all objects above luminoisty cut. Defaults to -99."
+)
+
+parser.add_argument(
     "--vcat_offset",
     type=float,
     default=0.,
