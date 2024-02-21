@@ -179,7 +179,7 @@ class HaloCatalog():
         # save in object
         self.zcat = zobs
 
-    def observation_cull(self, params):
+    def observation_cull(self, params, in_place=True):
         """
         cuts the catalog by observational parameters: cuts to only objects above a certain luminosity
         and then randomly selects N objects from that cut list.
@@ -189,15 +189,29 @@ class HaloCatalog():
             params.vcat_seed: rng seed (using the velocity one)
         """
 
+        if not in_place:
+            halos = self.copy()
+
         # cut by luminosity
-        self.attrcut_subset('Lcat', params.lcat_cutoff, np.nanmax(self.Lcat)+10, params, in_place=True)
+        if in_place:
+            self.attrcut_subset('Lcat', params.lcat_cutoff, np.nanmax(self.Lcat)+10, params, in_place=True)
+        else:
+            halos.attrcut_subset('Lcat', params.lcat_cutoff, np.nanmax(self.Lcat)+10, params, in_place=True)
 
         if params.goal_nobj > 0:
             # select nobj random objects from the leftover catalog
             rng = np.random.default_rng(params.vcat_seed)
             keepidx = rng.choice(self.nhalo, params.goal_nobj, replace=False)
             # cut to these objects
-            self.indexcut(keepidx, in_place=True)
+            if in_place:
+                self.indexcut(keepidx, in_place=True)
+            else:
+                halos.indexcut(keepidx, in_place=True)
+
+        if params.verbose: print('\n\t%d halos remain after observability cuts' % self.nhalo)
+
+        if in_place:
+            return halos
 
     
     #### FUNCTIONS TO SLICE THE HALO catalog IN SOME WAY
