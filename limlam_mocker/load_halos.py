@@ -210,7 +210,7 @@ class HaloCatalog():
 
         if params.verbose: print('\n\t%d halos remain after observability cuts' % self.nhalo)
 
-        if in_place:
+        if not in_place:
             return halos
 
     
