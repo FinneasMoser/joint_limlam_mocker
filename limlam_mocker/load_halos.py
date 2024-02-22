@@ -201,7 +201,7 @@ class HaloCatalog():
         if params.goal_nobj > 0:
             # select nobj random objects from the leftover catalog
             rng = np.random.default_rng(params.vcat_seed)
-            keepidx = rng.choice(self.nhalo, params.goal_nobj, replace=False)
+            keepidx = rng.choice(self.nhalo, params.goal_nobj, replace=False) #*** use probability here to weight selections
             # cut to these objects
             if in_place:
                 self.indexcut(keepidx, in_place=True)

@@ -339,6 +339,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--weight_cat_hitmap",
+    type=str2bool,
+    default=False,
+    help="(SimGenerator) When calculating statistics on the output map, weight the catalog power spectrum by Lcat. Defaults to False."
+)
+
+parser.add_argument(
     "--output_dir",
     type=str,
     default='./simulations',
