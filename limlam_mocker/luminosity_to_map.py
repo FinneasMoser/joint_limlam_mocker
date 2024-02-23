@@ -162,13 +162,20 @@ class SimMap():
 
         # BINS HALOS SPECTRALLY BY VVIR, MAKES MAPS OF EACH SUBSET, SMOOTHS THEM, AND
         # THEN COMBINES
-        if ~params.freqbroaden or 1==params.bincount:
+        if 1==params.bincount or not params.freqbroaden:
             subsets = [halos]
         else:
-            binattr_val = getattr(halos, params.binattr)
+            try:
+                binattr_val = getattr(halos, 'vbroaden')
+            except AttributeError:
+                halos.get_velocities(params)
+                binattr_val = getattr(halos, 'vbroaden')
             attr_ranges = np.linspace(min(binattr_val)*(1-1e-16),max(binattr_val), params.bincount+1)
-            subsets = [halos.attrcut_subset(halos, params.binattr, v1, v2)
+            verb = params.verbose
+            params.verbose = False
+            subsets = [halos.attrcut_subset('vbroaden', v1, v2, params)
                             for v1,v2 in zip(attr_ranges[:-1], attr_ranges[1:])]
+            params.verbose = verb
 
         # SET UP FINER BINNING IN RA, DEC, FREQUENCY
         # (if oversampling isn't necessary these will just be equal to the regular sampling)
