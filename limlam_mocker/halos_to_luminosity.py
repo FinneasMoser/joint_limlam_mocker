@@ -83,7 +83,7 @@ def Mhalo_to_Lco(halos, params):
             }
 
     if params.model in dict.keys():
-        return dict[params.model](halos, params.model_coeffs)
+        return dict[params.model](halos, params.co_model_coeffs)
 
     else:
         sys.exit('\n\n\tYour model, '+params.model+', does not seem to exist\n\t\tPlease check src/halos_to_luminosity.py to add it\n\n')
@@ -484,11 +484,11 @@ def Mhalo_to_Lcatalog_test1(halos, params):
         # default to scaled version of UM+COLDz+COPSS model from Chung+22 ***
         coeffs = (
             -2, -0.5, 11, 13, 0.5)
-        halos.model_coeffs = coeffs
+        halos.catalog_coeffs = coeffs
         A, B, logC, logM, sigma = coeffs
     else:
         A,B,logC,logM,sigma = coeffs
-        halos.model_coeffs = coeffs
+        halos.catalog_coeffs = coeffs
 
     Mh = halos.M
 
@@ -517,11 +517,11 @@ def Mhalo_to_Lcatalog_test2(halos, params):
         # default to wildly different version of UM+COLDz+COPSS model from Chung+22 ***
         coeffs = (
             0.5, 2, 11, 12, 0.5)
-        halos.model_coeffs = coeffs
+        halos.catalog_coeffs = coeffs
         A, B, logC, logM, sigma = coeffs
     else:
         A,B,logC,logM,sigma = coeffs
-        halos.model_coeffs = coeffs
+        halos.catalog_coeffs = coeffs
 
     Mh = halos.M
 

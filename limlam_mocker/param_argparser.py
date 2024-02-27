@@ -79,7 +79,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "--model_coeffs",
+    "--co_model_coeffs",
     type=str2list,
     default=None,
     help="(SimGenerator) Adjusted model coefficients. If 'None', default values for the model are used."
@@ -93,7 +93,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--catalog_coeffs",
-    type=list,
+    type=str2list,
     default=None,
     help="(SimGenerator) Coefficients used for the emission modeling function. Defaults to None."
 )
