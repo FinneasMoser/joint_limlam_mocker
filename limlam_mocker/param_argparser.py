@@ -60,15 +60,15 @@ parser.add_argument(
 parser.add_argument(
     "--mass_cutoff",
     type=float,
-    default=500000000000.,
-    help="(SimGenerator) Maximum DM mass to include in the simulated cube (in M_sun). Default 5e11 M_sun."
+    default=100000000000000.,
+    help="(SimGenerator) Maximum DM mass to include in the simulated cube (in M_sun). Default 1e14 M_sun."
 )
 
 parser.add_argument(
     "--min_mass",
     type=float,
-    default=10000000000.,
-    help="(SimGenerator) Minimum DM mass to include in the simulated cube (in M_sun). Default 1e10 M_sun."
+    default=1000000000.,
+    help="(SimGenerator) Minimum DM mass to include in the simulated cube (in M_sun). Default 1e9 M_sun."
 )
 
 parser.add_argument(
