@@ -339,9 +339,11 @@ class SimMap():
         creates:
             self.mapnoise: noise map in uK (just subtract it off the map to get the signal-only cube again)
         """
+        # assuming an even spread, fraction of total integration time spent on each voxel
+        voxfrac = (self.pix_size_x*self.pix_size_y)*(self.fov_x * self.fov_y)
 
         # calculate the noise level from the integration time
-        sigma = 44*1e6 / np.sqrt(2*19*params.noise_int_time*3600*self.dnu)
+        sigma = 44*1e6 / np.sqrt(2*19*params.noise_int_time*3600*voxfrac*self.dnu*1e9)
 
         # generate noise map
         rng = np.random.default_rng(params.noise_seed)
@@ -350,6 +352,7 @@ class SimMap():
 
         # add it in
         self.map = self.map + noise
+        self.sigma = sigma
 
 
     @timeme
