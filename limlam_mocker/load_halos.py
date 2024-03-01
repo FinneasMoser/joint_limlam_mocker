@@ -111,6 +111,7 @@ class HaloCatalog():
 
         # relevant conditions:
         goodidx = (self.M > params.min_mass) * \
+                  (self.M < params.mass_cutoff) * \
                   (self.redshift >= params.z_i) * \
                   (self.redshift <= params.z_f) * \
                   (np.abs(self.ra) <= params.fov_x/2) * \
