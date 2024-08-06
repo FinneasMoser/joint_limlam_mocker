@@ -330,6 +330,41 @@ class SimMap():
             if params.verbose:
                 print('\nAdding COMAP radiometer noise with {} hr integration time'.format(params.noise_int_time))
 
+        if params.add_foreground:
+            self.add_foreground(params)
+            if params.verbose:
+                print('\nAdding foreground emission using permutation {} and a scale factor of {}'.format(params.fg_permutation,
+                                                                                                          params.fg_scalefactor))
+                
+    def subtract_mean(self):
+        """
+        subtract off the mean in each channel and each spaxel (simulates the low-pass filter in an actual map)
+        order agrees with the order used by the actual COMAP pipline (ie per-channel and then per-spaxel)
+        uses:
+            self.map 
+        creates:
+            self.meanvals: the mean value in each spectral channel and each spaxel, summed together to create a data cube
+                            (add it back on to the map to get the original one)
+        """
+
+        ogmap = self.map 
+        spaceres = self.map.shape[0]
+        specres = self.map.shape[2]
+
+        specmean = np.nanmean(ogmap, axis=(0,1))
+        specmean = np.tile(specmean, (spaceres,spaceres,1))
+
+        smap = ogmap - specmean
+
+        spacemean = np.nanmean(smap, axis=2)
+        spacemean = np.tile(spacemean.T, (specres,1,1)).T
+
+        ssmap = smap - spacemean 
+
+        self.map = ssmap 
+        self.meanvals = spacemean + specmean 
+
+
     def add_random_comap_noise(self, params):
         """
         quick and dirty way to add randomly-generated noise (in uK) to the CO map 
@@ -354,6 +389,43 @@ class SimMap():
         self.map = self.map + noise
         self.sigma = sigma
 
+    def add_foreground(self, params):
+        """
+        quick and dirty way to add foreground/background emission
+        uses:
+            params.fg_permutation: integer pointing to how the actual map will be permuted to turn it into a foreground map
+            params.fg_scalefactor: how much fainter the foregrounds should be than the actual map
+        creates:
+            self.foregroundmap: foreground map in uK (just subtract it off the map to get the signal-only cube again)
+        """
+
+        maparr = self.map 
+        i = params.fg_permutation
+
+        # permute the map along an axis of symmetry to make a foregound map that doens't line up with the 'actual' LSS
+        if np.isin(i, (0,1,2)):
+            permmap = np.rot90(maparr, i+1, axes=(0,1))
+        elif i == 3:
+            permmap = np.flip(maparr, axis=0)
+        elif i == 4:
+            permmap = np.flip(maparr, axis=1)
+        elif i == 5:
+            permmap = np.flip(maparr, axis=2)
+        elif np.isin(i, (6,7,8)):
+            permmap = np.flip(np.rot90(maparr, i+1, axes=(0,1)), axis=2)
+        elif i == 9:
+            permmap = np.flip(np.flip(maparr, axis=0), axis=2)
+        elif i == 10:
+            permmap = np.flip(np.flip(maparr, axis=1), axis=2)
+
+        # scale the foreground map by the input factor
+        fgmap = permmap / params.fg_scalefactor
+        self.foregroundmap = fgmap 
+
+        # add it in
+        self.map = self.map + fgmap
+
+
 
     @timeme
     def write(self, params):
@@ -366,6 +438,10 @@ class SimMap():
             hits = self.hit
         except AttributeError:
             hits = 0.
+        try:
+            sigma = self.sigma 
+        except AttributeError: 
+            sigma = 1
         np.savez(params.map_output_file,
                  fov_x=self.fov_x, fov_y=self.fov_y,
                  pix_size_x=self.pix_size_x, pix_size_y=self.pix_size_y,
@@ -375,7 +451,8 @@ class SimMap():
                  map_frequencies = self.nu_bincents,
                  map_cube        = self.map,
                  cat_cube        = self.catmap,
-                 cat_hits        = hits)
+                 cat_hits        = hits,
+                 sigma           = sigma)
 
         return
 
@@ -406,6 +483,8 @@ def T_line(halos, map, attribute='Lco'):
      T_line units of [L_sun/Mpc^2/GHz] * [(km/s)^2 / (J/K) / (GHz) ^2] * 1/sr
         = [ 3.48e26 W/Mpc^2/GHz ] * [ 6.50966e21 s^2/K/kg ]
         = 2.63083e-6 K = 2.63083 muK
+
+    returns Tco in MICROKELVIN
     """
     lum = getattr(halos, attribute)
     convfac = 2.63083

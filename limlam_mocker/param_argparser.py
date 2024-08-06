@@ -295,6 +295,27 @@ parser.add_argument(
     help="(SimGenerator) RNG seed for generating COMAP radiometer noise. Default is 12345."
 )
 
+parser.add_argument(
+    "--add_foreground",
+    type=str2bool,
+    default=False,
+    help="(SimGenerator) Quick and dirty way to add in some fake foreground/background emission. Defaults to False."
+)
+
+parser.add_argument(
+    "--fg_permutation",
+    type=int,
+    default=0,
+    help="(SimGenerator) How to permute the input map to get the foreground emission. Values 0-10, defaults to 0."
+)
+
+parser.add_argument(
+    "--fg_scalefactor",
+    type=float,
+    default=10,
+    help="(SimGenerator) Factor by which to scale down the input map to get the foreground emission. Defaults to 10."
+)
+
 ### CATALOG INSTRUMENT/ASTROPHYSICS MODIFIERS
 parser.add_argument(
     "--lcat_cutoff",
