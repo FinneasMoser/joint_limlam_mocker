@@ -274,7 +274,7 @@ class SimMap():
             # come up with a convolution kernel approximating the beam if one isn't already passed
             if not params.beamkernel:
                 # number of refined pixels corresponding to the fwhm in arcminutes
-                std = 4.5 / (2*np.sqrt(2*np.log(2))) / 60 # standard deviation in degrees
+                std = params.beamfwhm / (2*np.sqrt(2*np.log(2))) / 60 # standard deviation in degrees
                 std_pix = std / dx_fine
 
                 beamkernel = Gaussian2DKernel(std_pix)

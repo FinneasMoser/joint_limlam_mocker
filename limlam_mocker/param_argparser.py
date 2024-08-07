@@ -247,6 +247,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--beamfwhm",
+    type=float,
+    default=4.5,
+    help="(SimGenerator) FWHM of the Gaussian beam to smooth the data by. Defaults to 4.5. If both this and beamkernel are set beamkernel will take priority."
+)
+
+parser.add_argument(
     "--freqbroaden",
     type=str2bool,
     default=True,
