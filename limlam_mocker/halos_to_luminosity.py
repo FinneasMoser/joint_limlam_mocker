@@ -32,7 +32,7 @@ def Mhalo_to_Ls(halos, params):
         params.save_scatterless_lums = None
 
     # CO luminosities without the lognormal scatter
-    halos.Lco = Mhalo_to_Lco(halos, params)
+    halos.Lco = Mhalo_to_Lco(halos, params, scatter=False)
     print('done CO luminosities')
 
     # catalog luminosities
@@ -58,7 +58,7 @@ def Mhalo_to_Ls(halos, params):
 
 
 @timeme
-def Mhalo_to_Lco(halos, params):
+def Mhalo_to_Lco(halos, params, scatter=True):
     """
     General function to get L_co(M_halo) given a certain model <model>
     if adding your own model follow this structure,
@@ -83,13 +83,13 @@ def Mhalo_to_Lco(halos, params):
             }
 
     if params.model in dict.keys():
-        return dict[params.model](halos, params.co_model_coeffs)
+        return dict[params.model](halos, params.co_model_coeffs, scatter=scatter)
 
     else:
         sys.exit('\n\n\tYour model, '+params.model+', does not seem to exist\n\t\tPlease check src/halos_to_luminosity.py to add it\n\n')
 
 
-def Mhalo_to_Lco_Li(halos, coeffs):
+def Mhalo_to_Lco_Li(halos, coeffs, scatter=True):
     """
     halo mass to SFR to L_CO
     following the Tony li 2016 model
@@ -114,13 +114,14 @@ def Mhalo_to_Lco_Li(halos, coeffs):
     Lcop     = lir**alphainv * 10**(-beta * alphainv)
     # Lco in L_sun
     Lco      =  4.9e-5 * Lcop
-    Lco      = add_log_normal_scatter(Lco, sigma_lco, 2)
+    if scatter:
+        Lco      = add_log_normal_scatter(Lco, sigma_lco, 2)
 
     if debug.verbose: print('\n\tMhalo to Lco calculated')
 
     return Lco
 
-def Mhalo_to_Lco_Li_sigmasc(halos, coeffs):
+def Mhalo_to_Lco_Li_sigmasc(halos, coeffs, scatter=True):
     """
     halo mass to SFR to L_CO
     following the Tony li 2016 model
@@ -153,7 +154,7 @@ def Mhalo_to_Lco_Li_sigmasc(halos, coeffs):
 
     return Lco
 
-def Mhalo_to_Lco_Padmanabhan(halos, coeffs):
+def Mhalo_to_Lco_Padmanabhan(halos, coeffs, scatter=True):
     """
     halo mass to L_CO
     following the Padmanabhan 2017 model
@@ -178,7 +179,7 @@ def Mhalo_to_Lco_Padmanabhan(halos, coeffs):
 
     return Lco
 
-def Mhalo_to_Lco_fiuducial(halos, coeffs):
+def Mhalo_to_Lco_fiuducial(halos, coeffs, scatter=True):
     """
     DD 2022, based on Chung+2022 fiuducial model
     arXiv 2111.05931
@@ -197,11 +198,12 @@ def Mhalo_to_Lco_fiuducial(halos, coeffs):
 
     Lprime = C / ((Mh/M)**A + (Mh/M)**B)
     Lco = 4.9e-5 * Lprime
-    Lco = add_log_normal_scatter(Lco, sigma, 3)
+    if scatter:
+        Lco = add_log_normal_scatter(Lco, sigma, 3)
 
     return Lco
 
-def Mhalo_to_Lco_Yang(halos, coeffs):
+def Mhalo_to_Lco_Yang(halos, coeffs, scatter=True):
     """
     DD 2022, SAM from Breysse+2022/Yang+2021
     arXiv 2111.05933/2108.07716
@@ -239,12 +241,12 @@ def Mhalo_to_Lco_Yang(halos, coeffs):
 
     # scatter
     sigmaco = 0.357 - 0.0701*z + 0.00621*z**2
-
-    Lco = add_log_normal_scatter(Lco, sigmaco, 4)
+    if scatter:
+        Lco = add_log_normal_scatter(Lco, sigmaco, 4)
     return Lco
 
 
-def Mhalo_to_Lco_arbitrary(halos, coeffs):
+def Mhalo_to_Lco_arbitrary(halos, coeffs, scatter=True):
     """
     halo mass to L_CO
     allows for utterly arbitrary models!
