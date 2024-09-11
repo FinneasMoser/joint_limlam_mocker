@@ -128,6 +128,7 @@ def Mhalo_to_Lco_Li_sigmasc(halos, coeffs, scatter=True):
     arXiv 1503.08833
 
     DD 2022 - updated to include a single lognormal scatter coeff
+    (doing all the scatter on the luminosities directly and not on the SFR values)
     """
     if coeffs is None:
         # Power law parameters from paper
@@ -139,7 +140,7 @@ def Mhalo_to_Lco_Li_sigmasc(halos, coeffs, scatter=True):
 
     # Get Star formation rate
     if not hasattr(halos,'sfr'):
-        halos.sfr = Mhalo_to_sfr_Behroozi(halos, sigma_sc);
+        halos.sfr = Mhalo_to_sfr_Behroozi(halos, 0);
 
     # infrared luminosity
     lir      = halos.sfr * 1e10 / delta_mf
@@ -148,7 +149,9 @@ def Mhalo_to_Lco_Li_sigmasc(halos, coeffs, scatter=True):
     Lcop     = lir**alphainv * 10**(-beta * alphainv)
     # Lco in L_sun
     Lco      =  4.9e-5 * Lcop
-#    Lco      = add_log_normal_scatter(Lco, sigma_lco, 2) #DD: ?
+
+    if scatter:
+        Lco      = add_log_normal_scatter(Lco, sigma_sc, 2) 
 
     if debug.verbose: print('\n\tMhalo to Lco calculated')
 
@@ -279,7 +282,8 @@ def Mhalo_to_sfr_Behroozi(halos, sigma_sfr, bad_extrapolation=False):
     if sfr_interp_tab is None:
         sfr_interp_tab = get_sfr_table(bad_extrapolation)
     sfr = sfr_interp_tab.ev(np.log10(halos.M), np.log10(halos.redshift+1))
-    sfr = add_log_normal_scatter(sfr, sigma_sfr, 1)
+    if sigma_sfr > 0:
+        sfr = add_log_normal_scatter(sfr, sigma_sfr, 1)
     return sfr
 
 def get_sfr_table(bad_extrapolation=False):

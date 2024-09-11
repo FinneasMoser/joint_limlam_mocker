@@ -144,8 +144,13 @@ class HaloCatalog():
         if params.velocity_attr == 'vvirincli':
             # Calculate doppler parameters
             self.sin_i = np.sqrt(1-np.random.uniform(size=self.nhalo)**2)
-            self.vvir = vvir(self.M, self.redshift) / 2 #****
+            self.vvir = vvir(self.M, self.redshift) # / 2 #****
             self.vbroaden = self.vvir*self.sin_i/0.866
+
+        if params.velocity_attr == 'vvirincli_scaled':
+            # scale the virial velocity by an input parameter for testing
+            self.sin_i = np.sqrt(1-np.random.uniform(size=self.nhalo)**2)
+            self.vvir = vvir(self.M, self.redshift) / params.vvirscalefactor
 
         elif params.velocity_attr == 'vvir':
             # Calculate doppler parameters
