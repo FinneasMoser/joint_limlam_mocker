@@ -414,6 +414,7 @@ def Mhalo_to_Lcatalog(halos, params):
 
     dict = {'lya_chung':            Mhalo_to_LLya_Chung,
             'schechter':           Mhalo_to_Lcatalog_schechter,
+            'schechter_amp':        Mhalo_to_Lcatalog_schechter_amp,
             'default':          Mhalo_to_Lcatalog_test1,
             'test2':          Mhalo_to_Lcatalog_test2
             }
