@@ -147,10 +147,28 @@ class HaloCatalog():
             self.vvir = vvir(self.M, self.redshift) # / 2 #****
             self.vbroaden = self.vvir*self.sin_i/0.866
 
-        if params.velocity_attr == 'vvirincli_scaled':
+        elif params.velocity_attr == 'vvirincli_scaled':
             # scale the virial velocity by an input parameter for testing
             self.sin_i = np.sqrt(1-np.random.uniform(size=self.nhalo)**2)
-            self.vvir = vvir(self.M, self.redshift) / params.vvirscalefactor
+            self.vvir = vvir(self.M, self.redshift)
+            self.vbroaden = self.vvir*self.sin_i/0.866/params.vvirscalefactor
+
+        elif params.velocity_attr == 'vmpeak':
+            # universemachine v_m,peak velocity (*** scale by inclination??)
+            a = 1 / (1+self.redshift)
+            M200 = (1.64e12)/((a/0.378)**-0.142 + (a/0.378)**-1.79)
+            vmpeak = 200 * (self.M / M200)**0.3
+            self.vbroaden = vmpeak
+
+        elif params.velocity_attr == 'vmpeakincli':
+            self.sin_i = np.sqrt(1-np.random.uniform(size=self.nhalo)**2)
+            # universemachine v_m,peak velocity (*** scale by inclination??)
+            a = 1 / (1+self.redshift)
+            M200 = (1.64e12)/((a/0.378)**-0.142 + (a/0.378)**-1.79)
+            vmpeak = 200 * (self.M / M200)**0.3
+            self.vbroaden = vmpeak*self.sin_i/0.866
+
+
 
         elif params.velocity_attr == 'vvir':
             # Calculate doppler parameters

@@ -474,6 +474,19 @@ def Mhalo_to_Lcatalog_schechter(halos, params):
     Llya, params = abundancematch(schechter, params.catalog_coeffs, halos, params)
     return Llya, params
 
+def Mhalo_to_Lcatalog_schechter_amp(halos, params):
+    """ wrapper to use a schechter function to generate catalog luminosities
+    this one is explicitly weighted with a constant value passed as the first catalog coefficient
+    if that constant value is one it's identical to the function above"""
+
+    # default to Lya luminosity function coefficients from Ouchi et al. 2020
+    if not params.catalog_coeffs:
+        params.catalog_coeffs =  [1, 0.849e43, 3.9e-4, -1.8, 39, 45]
+
+    Llya, params = abundancematch(schechter, params.catalog_coeffs[1:], halos, params)
+    Llya *= params.catalog_coeffs[0]
+    return Llya, params
+
 
 def Mhalo_to_Lcatalog_test1(halos, params):
     """
