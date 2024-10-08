@@ -162,12 +162,13 @@ def Mhalo_to_Lco_Padmanabhan(halos, coeffs, scatter=True):
     halo mass to L_CO
     following the Padmanabhan 2017 model
     arXiv 1706.01471
+    DD 2024 -- added duty fraction directly scaling the luminosity of each halo
     """
     if coeffs is None:
-        m10,m11,n10,n11,b10,b11,y10,y11 = (
-            4.17e12,-1.17,0.0033,0.04,0.95,0.48,0.66,-0.33)
+        m10,m11,n10,n11,b10,b11,y10,y11,fduty = (
+            4.17e12,-1.17,0.0033,0.04,0.95,0.48,0.66,-0.33,1)
     else:
-        m10,m11,n10,n11,b10,b11,y10,y11 = coeffs
+        m10,m11,n10,n11,b10,b11,y10,y11,fduty = coeffs
 
     z  = halos.redshift
     hm = halos.M
@@ -178,7 +179,7 @@ def Mhalo_to_Lco_Padmanabhan(halos, coeffs, scatter=True):
     y  = y10 + y11 * z/(z+1)
 
     Lprime = 2 * n * hm / ( (hm/m1)**(-b) + (hm/m1)**y )
-    Lco    = 4.9e-5 * Lprime
+    Lco    = 4.9e-5 * Lprime * fduty
 
     return Lco
 
