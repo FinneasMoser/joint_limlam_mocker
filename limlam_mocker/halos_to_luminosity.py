@@ -100,7 +100,7 @@ def Mhalo_to_Lco_Li(halos, coeffs, scatter=True):
         log_delta_mf,alpha,beta,sigma_sfr,sigma_lco,scale = (
             0.0, 1.37,-1.74, 0.3, 0.3, 1.0)
     else:
-        log_delta_mf,alpha,beta,sigma_sfr,sigma_lco = coeffs;
+        log_delta_mf,alpha,beta,sigma_sfr,sigma_lco,scale = coeffs;
     delta_mf = 10**log_delta_mf;
 
     # Get Star formation rate
