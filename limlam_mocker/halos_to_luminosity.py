@@ -97,8 +97,8 @@ def Mhalo_to_Lco_Li(halos, coeffs, scatter=True):
     """
     if coeffs is None:
         # Power law parameters from paper
-        log_delta_mf,alpha,beta,sigma_sfr,sigma_lco = (
-            0.0, 1.37,-1.74, 0.3, 0.3)
+        log_delta_mf,alpha,beta,sigma_sfr,sigma_lco,scale = (
+            0.0, 1.37,-1.74, 0.3, 0.3, 1.0)
     else:
         log_delta_mf,alpha,beta,sigma_sfr,sigma_lco = coeffs;
     delta_mf = 10**log_delta_mf;
@@ -113,7 +113,7 @@ def Mhalo_to_Lco_Li(halos, coeffs, scatter=True):
     # Lco' (observers units)
     Lcop     = lir**alphainv * 10**(-beta * alphainv)
     # Lco in L_sun
-    Lco      =  4.9e-5 * Lcop
+    Lco      =  4.9e-5 * Lcop * scale
     if scatter:
         Lco      = add_log_normal_scatter(Lco, sigma_lco, 2)
 
