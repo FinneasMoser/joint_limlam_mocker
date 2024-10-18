@@ -153,20 +153,36 @@ class HaloCatalog():
             self.vvir = vvir(self.M, self.redshift)
             self.vbroaden = self.vvir*self.sin_i/0.866/params.vvirscalefactor
 
+        elif params.velocity_attr == 'vvirincli_cutoff':
+            # cut off the virial velocity at some cutoff value (so it's not 
+            # overestimated for the most massive halos)
+            self.sin_i = np.sqrt(1-np.random.uniform(size=self.nhalo)**2)
+            self.vvir = vvir(self.M, self.redshift)
+            vbroaden = self.vvir*self.sin_i/0.866
+            # taking the remainder around the boundary condition (to avoid a big bump right there)
+            ofidx = np.where(vbroaden > params.vvircutoff)
+            vbroaden[ofidx] = vbroaden[ofidx] % params.vvircutoff
+            self.vbroaden = vbroaden
+
         elif params.velocity_attr == 'vmpeak':
-            # universemachine v_m,peak velocity (*** scale by inclination??)
+            # universemachine v_m,peak velocity NOT scaled by inclination
             a = 1 / (1+self.redshift)
             M200 = (1.64e12)/((a/0.378)**-0.142 + (a/0.378)**-1.79)
             vmpeak = 200 * (self.M / M200)**0.3
-            self.vbroaden = vmpeak
+            rng = np.random.default_rng(12345)
+            scvmpeak = 10**(np.log10(vmpeak)*rng.normal(1,0.1, len(vmpeak)))
+            self.vbroaden = scvmpeak
 
         elif params.velocity_attr == 'vmpeakincli':
+            # universemachine v_m,peak velocity scaled by inclination
+            # with an additional lognormal scatter of 0.1 dex
             self.sin_i = np.sqrt(1-np.random.uniform(size=self.nhalo)**2)
-            # universemachine v_m,peak velocity (*** scale by inclination??)
             a = 1 / (1+self.redshift)
             M200 = (1.64e12)/((a/0.378)**-0.142 + (a/0.378)**-1.79)
             vmpeak = 200 * (self.M / M200)**0.3
-            self.vbroaden = vmpeak*self.sin_i/0.866
+            rng = np.random.default_rng(12345)
+            scvmpeak = 10**(np.log10(vmpeak)*rng.normal(1,0.1, len(vmpeak)))
+            self.vbroaden = scvmpeak*self.sin_i/0.866
 
 
 

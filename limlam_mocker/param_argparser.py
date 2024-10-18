@@ -87,7 +87,7 @@ parser.add_argument(
 parser.add_argument(
     "--catalog_model",
     type=str,
-    default='default',
+    default='schechter',
     help="(SimGenerator) Name of the function used to model emission of the other tracer. Defaults to 'default' function in generate_luminosities.py."
 )
 
@@ -115,8 +115,8 @@ parser.add_argument(
 parser.add_argument(
     "--rho",
     type=float,
-    default=0.8,
-    help="(SimGenerator) Correlation between CO and tracer luminosities (-1, 1). Default to 0.8."
+    default=-0.5,
+    help="(SimGenerator) Correlation between CO and tracer luminosities (-1, 1). Default to -0.5."
 )
 
 parser.add_argument(
