@@ -378,7 +378,7 @@ class SimMap():
         voxfrac = (self.pix_size_x*self.pix_size_y)/(self.fov_x * self.fov_y)
 
         # calculate the noise level from the integration time
-        sigma = 44*1e6 / np.sqrt(2*19*params.noise_int_time*3600*voxfrac*self.dnu*1e9)
+        sigma = 44*1e6 / np.sqrt(2*params.nfeeds*params.noise_int_time*3600*voxfrac*self.dnu*1e9)
 
         # generate noise map
         rng = np.random.default_rng(params.noise_seed)

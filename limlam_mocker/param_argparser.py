@@ -296,6 +296,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--nfeeds",
+    type=int,
+    default=19,
+    help="(SimGenerator) Number of independent FPA feeds observing. Defaults to 19 (COMAP Pathfinder value)."
+)
+
+parser.add_argument(
     "--noise_seed",
     type=int,
     default=12345,
