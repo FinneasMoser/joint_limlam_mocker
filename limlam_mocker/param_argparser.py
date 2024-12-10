@@ -296,6 +296,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--Tsys",
+    type=float,
+    default=44.,
+    help="(SimGenerator) System temperature of the instrument used to calculate noise. Defaults to COMAP Ka band (44 K)."
+)
+
+parser.add_argument(
     "--nfeeds",
     type=int,
     default=19,
