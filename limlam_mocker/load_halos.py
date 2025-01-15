@@ -227,6 +227,7 @@ class HaloCatalog():
             params.lcat_cutoff: the lower limit on catalog luminosity to include (in Lsun)
             params.goal_nobj: number of catalog objects to include once the cut is made
             params.vcat_seed: rng seed (using the velocity one)
+            params.obs_weight: whether observation culling should be logarithmic or linear
         """
 
         if not in_place:
@@ -241,7 +242,11 @@ class HaloCatalog():
         if params.goal_nobj > 0:
             # select nobj random objects from the leftover catalog
             rng = np.random.default_rng(params.vcat_seed)
-            keepidx = rng.choice(self.nhalo, params.goal_nobj, replace=False, p=np.log10(self.Lcat)/np.sum(np.log10(self.Lcat))) #*** use probability here to weight selections
+            if params.obs_weight == 'linear':
+                weights = self.Lcat / np.sum(self.Lcat)
+            elif params.obs_weight == 'log':
+                weights = np.log10(self.Lcat) / np.sum(np.log10(self.Lcat))
+            keepidx = rng.choice(self.nhalo, params.goal_nobj, replace=False, p=weights) #*** use probability here to weight selections
             # cut to these objects
             if in_place:
                 self.indexcut(keepidx, in_place=True)

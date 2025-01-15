@@ -353,6 +353,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--obs_weight",
+    type=str,
+    default='linear',
+    help="(SimGenerator) How to weight catalog luminosities when cutting to goal_nobj observable ones. 'log' or 'linear', defaults to 'linear'." 
+)
+
+parser.add_argument(
     "--vcat_offset",
     type=float,
     default=0.,
