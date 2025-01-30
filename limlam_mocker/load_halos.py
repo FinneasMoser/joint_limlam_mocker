@@ -240,17 +240,25 @@ class HaloCatalog():
             halos.attrcut_subset('Lcat', params.lcat_cutoff, np.nanmax(self.Lcat)+10, params, in_place=True)
 
         if params.goal_nobj > 0:
-            # select nobj random objects from the leftover catalog
-            rng = np.random.default_rng(params.vcat_seed)
-            if params.obs_weight == 'linear':
-                weights = self.Lcat / np.sum(self.Lcat)
-            elif params.obs_weight == 'log':
-                weights = np.log10(self.Lcat) / np.sum(np.log10(self.Lcat))
-            keepidx = rng.choice(self.nhalo, params.goal_nobj, replace=False, p=weights) #*** use probability here to weight selections
-            # cut to these objects
             if in_place:
+                # select nobj random objects from the leftover catalog
+                rng = np.random.default_rng(params.vcat_seed)
+                if params.obs_weight == 'linear':
+                    weights = self.Lcat / np.sum(self.Lcat)
+                elif params.obs_weight == 'log':
+                    weights = np.log10(self.Lcat) / np.sum(np.log10(self.Lcat))
+                keepidx = rng.choice(self.nhalo, params.goal_nobj, replace=False, p=weights) #*** use probability here to weight selections
+                # cut to these objects
                 self.indexcut(keepidx, in_place=True)
             else:
+                # select nobj random objects from the leftover catalog
+                rng = np.random.default_rng(params.vcat_seed)
+                if params.obs_weight == 'linear':
+                    weights = halos.Lcat / np.sum(halos.Lcat)
+                elif params.obs_weight == 'log':
+                    weights = np.log10(halos.Lcat) / np.sum(np.log10(halos.Lcat))
+                keepidx = rng.choice(halos.nhalo, params.goal_nobj, replace=False, p=weights) #*** use probability here to weight selections
+                # cut to these objects
                 halos.indexcut(keepidx, in_place=True)
 
         if params.verbose: print('\n\t%d halos remain after observability cuts' % self.nhalo)
