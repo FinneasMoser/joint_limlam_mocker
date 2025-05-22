@@ -11,7 +11,7 @@ parameters are mostly very self explanatory, and are set up with argparse. You c
         >>> ./lim_mocker.py -p ./limlam_mocker/param_example.txt
 
 
-This will load in the halo catalogue, assign luminosities to each halo, and bin them up into a 3D intensity map data cube of size (npix_x, npix_y, nmaps). This map will then be saved using the npz format - eg https://docs.scipy.org/doc/numpy-1.12.0/reference/generated/numpy.savez.html . This file contains all required info for the maps - field of view, pixel size, frequency of maps, etc...
+This will load in the halo catalogue, assign luminosities to each halo, and bin them up into a 3D intensity map data cube of size (npix_x, npix_y, nmaps). This map will then be saved using the `npz format <https://docs.scipy.org/doc/numpy-1.12.0/reference/generated/numpy.savez.html>`_. This file contains all required info for the maps - field of view, pixel size, frequency of maps, etc...
 
 A small sample halo catalogue is included, but many more of larger sizes are available by contacting the author. 
 
