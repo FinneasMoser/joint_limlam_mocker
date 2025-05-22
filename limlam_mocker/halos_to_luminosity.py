@@ -10,14 +10,38 @@ from .tools import *
 
 sfr_interp_tab = None
 
+"""
+Functions for converting simulated halo properties to mock luminosities
+"""
+
 @timeme
 def Mhalo_to_Ls(halos, params):
     """
     wrapper function to calculate the CO luminosities and (if required) tracer
-    luminosities for the full halo catalog. returns a halo catalog object
-    with two new values for each halo: Lco (the CO luminosity) and Lcat (the
-    luminosity of the catalog tracer). pulls relavent model parameters out
-    of the params object
+    luminosities for the full halo catalog. 
+
+    inputs:
+    -------
+    halos: HaloCatalog object
+        the catalog of simulated halos for which to calculate luminosities
+    params: SimParameters object
+        the parameters for the simulation run. uses:
+            model: (str) the model to use for calculating the Lco values
+            catalog_model: (str) the model to use for calculating the Lcat values (if None, don't calculate Lcat values)
+            co_model_coeffs: (array-like of floats) the coeffecients for the co model
+            catalog_coeffs: (array-like of floats) the coefficients for the catalog model
+            codex: (float) the lognormal scatter in the Lco values in dex
+            catdex: (float) the lognormal scatter in the Lcat values in dex
+            rho: (float, -1 < 0 < 1) the correlation coefficient between the scatter in the two luminosities
+            lum_uncert_seed: (int) the random seed for scatter in the luminosities
+            save_scatterless_lums: (bool) if true, will save a copy of the luminosities with no random scatter applied
+    outputs:
+    --------
+    adds the following attributes to the input HaloCatalog object:
+        Lco: (array-like of floats) the LIM tracer luminosity (in solar luminosities)
+        Lcat: (array-like of floats) the galaxy catalogue tracer luminosity (in solar luminosities)
+        scatterless_Lco: (array like of floats, optional) LIM tracer luminosity with no scatter applied
+        scatterless_Lcat: (array like of floats, optional) galaxy catalogue tracer luminosity with no scatter applied
     """
 
     # if no random number generator seed is set, give it one
@@ -31,24 +55,25 @@ def Mhalo_to_Ls(halos, params):
     except AttributeError:
         params.save_scatterless_lums = None
 
-    # CO luminosities without the lognormal scatter
+    # calculate CO luminosities for each halo without any scatter
     halos.Lco = Mhalo_to_Lco(halos, params, scatter=False)
     print('done CO luminosities')
 
-    # catalog luminosities
+    # calculate catalog luminosities for each halo without any scatter
     if params.catalog_model:
         halos.Lcat, params = Mhalo_to_Lcatalog(halos, params)
         print('done catalog luminosities')
 
-        # for testing--save luminosity values directly from the model (no scatter)
+        # for testing--save the unscattered luminosity values
         if params.save_scatterless_lums:
             halos.scatterless_Lco = copy.deepcopy(halos.Lco)
             halos.scatterless_Lcat = copy.deepcopy(halos.Lcat)
 
-        # joint scatter
+        # calculate the joint scatter
         halos = add_co_tracer_dependant_scatter(halos, params.rho, params.codex, params.catdex, params.lum_uncert_seed)
 
-    else:
+    else: 
+        # for testing--save the unscattered luminosity values
         if params.save_scatterless_lums:
             halos.scatterless_Lco = copy.deepcopy(halos.Lco)
 
@@ -67,11 +92,11 @@ def Mhalo_to_Lco(halos, params, scatter=True):
 
     Parameters
     ----------
-    halos : class
+    halos : HaloCatalog class
         Contains all halo information (position, redshift, etc..)
     model : str
         Model to use, specified in the parameter file
-    coeffs :
+    coeffs : array-like
         None for default coeffs
     """
     dict = {'Li':          Mhalo_to_Lco_Li,
@@ -92,8 +117,7 @@ def Mhalo_to_Lco(halos, params, scatter=True):
 def Mhalo_to_Lco_Li(halos, coeffs, scatter=True):
     """
     halo mass to SFR to L_CO
-    following the Tony li 2016 model
-    arXiv 1503.08833
+    following the Li 2016 model (arXiv 1503.08833)
     """
     if coeffs is None:
         # Power law parameters from paper
@@ -124,8 +148,7 @@ def Mhalo_to_Lco_Li(halos, coeffs, scatter=True):
 def Mhalo_to_Lco_Li_sigmasc(halos, coeffs, scatter=True):
     """
     halo mass to SFR to L_CO
-    following the Tony li 2016 model
-    arXiv 1503.08833
+    following the Li 2016 model (arXiv 1503.08833)
 
     DD 2022 - updated to include a single lognormal scatter coeff
     (doing all the scatter on the luminosities directly and not on the SFR values)
@@ -160,9 +183,9 @@ def Mhalo_to_Lco_Li_sigmasc(halos, coeffs, scatter=True):
 def Mhalo_to_Lco_Padmanabhan(halos, coeffs, scatter=True):
     """
     halo mass to L_CO
-    following the Padmanabhan 2017 model
-    arXiv 1706.01471
+    following the Padmanabhan 2017 model (arXiv 1706.01471)
     DD 2024 -- added duty fraction directly scaling the luminosity of each halo
+    (this would more practically be randomly selecting a fraction (1-fduty) of halos to assign 0 luminosity)
     """
     if coeffs is None:
         m10,m11,n10,n11,b10,b11,y10,y11,fduty = (
@@ -185,8 +208,7 @@ def Mhalo_to_Lco_Padmanabhan(halos, coeffs, scatter=True):
 
 def Mhalo_to_Lco_fiuducial(halos, coeffs, scatter=True):
     """
-    DD 2022, based on Chung+2022 fiuducial model
-    arXiv 2111.05931
+    DD 2022, based on Chung+2022 fiuducial model (arXiv 2111.05931)
     """
     if coeffs is None:
         # default to UM+COLDz+COPSS model from Chung+22
@@ -322,8 +344,12 @@ def get_sfr_table(bad_extrapolation=False):
     return sfr_interp_tab
 
 
-### LUMINOSITY GENERATION FOR ANOTHER TRACER (USUALLY LYA)
+### HELPER FUNCTIONS FOR LUMINOSITY GENERATION FOR ANOTHER TRACER (USUALLY LYA)
 def schechter(L, coeffs):
+    """
+    generic schechter function (Schechter 1976)
+    coeffs are [Lstar, phistar, alpha, min lum, max lum]
+    """
     
     [Lstar, phistar, alpha, _, _] = coeffs
     
@@ -361,10 +387,27 @@ def halomassfunction(halos, params):
 
 def abundancematch(function, coeffs, halos, params):
     """
-    coeffs[-2] and coeffs[-1] are the min and max luminosity respectively
+    calculate Lcat values for each halo by abundance-matching to luminosity function
+    
+    inputs:
+    -------
+        function: function
+            describes shape of luminosity function (e.g. schechter function above)
+        coeffs: array-like of floats
+            the coefficients to be passed to the luminosity function for the particular case
+            coeffs[-2] and coeffs[-1] are the min and max luminosity to integrate over, respectively
+        halos: HaloCatalog object
+            information about the DM halos (mostly need mass: halos.M)
+        params: SimParameters object
+            holds the parameters for the simulation run
+    outputs:
+    --------
+    Adds to the HaloCatalog object:
+        Lcat: (array-like of floats) the catalogue luminosities
     
     """
     
+    # calculate the luminosity function
     logLprime = np.log10(np.logspace(coeffs[-2], coeffs[-1], 101))
     dlogLprime = logLprime[1:] - logLprime[:-1]
     dLprime = 10**logLprime[1:] - 10**logLprime[:-1]
@@ -373,6 +416,7 @@ def abundancematch(function, coeffs, halos, params):
     phiLarr = function(10**logLprimecents, coeffs)
     phiLdL = phiLarr*dLprime*u.erg/u.s
 
+    # integrate over it
     intL = []
     for i,L in enumerate(logLprimecents):
         intLval = np.sum(phiLdL[i:])
@@ -380,9 +424,10 @@ def abundancematch(function, coeffs, halos, params):
 
     intL = np.array(intL)
     
+    # claculate the halo mass function
     logMprimecents, intnM = halomassfunction(halos, params)
     
-#     Mtestarr = np.linspace(np.min(halos.M), np.max)
+    # interpolate between the two to get luminosities
     intMforM = np.interp(np.log10(halos.M), logMprimecents, intnM)
     LforintM = np.interp(intMforM, np.flip(intL), np.flip(logLprimecents))
     
@@ -396,7 +441,7 @@ def abundancematch(function, coeffs, halos, params):
 @timeme
 def Mhalo_to_Lcatalog(halos, params):
     """
-    General function to get L_catalog(M_halo) given a certain model <model>
+    wRAPPER function to get L_catalog(M_halo) given a certain model <model>
     if adding your own model follow this structure,
     and simply specify the model to use in the parameter file
     will output halo luminosities in **L_sun**
@@ -405,10 +450,10 @@ def Mhalo_to_Lcatalog(halos, params):
     ----------
     halos : class
         Contains all halo information (position, redshift, etc..)
-    model : str
-        Model to use, specified in the parameter file
-    coeffs :
-        None for default coeffs
+    params: SimParameters object
+        Uses:
+            catalog_model: (str) the model to use for calculating Lcats. Options are:
+            catalog_coeffs : (array-like) coefficients to be passed to model, None for default coeffs
     """
 
     model = params.catalog_model
@@ -467,7 +512,9 @@ def Mhalo_to_LLya_Chung(halos, params):
     return Llya, params
 
 def Mhalo_to_Lcatalog_schechter(halos, params):
-    """ wrapper to use a schechter function to generate catalog luminosities"""
+    """ 
+    wrapper to use a schechter function to generate catalog luminosities
+    """
 
     # default to Lya luminosity function coefficients from Ouchi et al. 2020
     if not params.catalog_coeffs:
@@ -477,9 +524,12 @@ def Mhalo_to_Lcatalog_schechter(halos, params):
     return Llya, params
 
 def Mhalo_to_Lcatalog_schechter_amp(halos, params):
-    """ wrapper to use a schechter function to generate catalog luminosities
+    """ 
+    wrapper to use a schechter function to generate catalog luminosities
     this one is explicitly weighted with a constant value passed as the first catalog coefficient
-    if that constant value is one it's identical to the function above"""
+    (used for simple amplitude modeling)
+    if that constant value is one it's identical to the function above
+    """
 
     # default to Lya luminosity function coefficients from Ouchi et al. 2020
     if not params.catalog_coeffs:
@@ -581,6 +631,21 @@ def add_co_tracer_dependant_scatter(halos, rho, codex, catdex, seed):
     """
     add correlated scatter between the CO luminosities and the other tracer luminosities
     use a passed covariance matrix to generate
+    inputs:
+    -------
+        halos: HaloCatalog object
+            stores all of the information for your catalog of DM halos
+        rho: (float, -1 < rho < 1)
+            correlation coefficient for relating the scatter in the two luminosity values
+        codex: float
+            lognormal scatter in the CO luminosities in dex
+        catdex: float
+            lognormal scatter in the catalog luminosities in dex
+        seed:
+            random generator seed for selecting the scatter values
+    outputs:
+        halos: HaloCatalog object
+            multiplies scatter in to halos.Lco and halos.Lcat
     """
     if np.any(np.logical_or(codex <= 0, catdex <= 0)):
         print('passed a negative dex value. not scattering')

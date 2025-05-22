@@ -10,12 +10,28 @@ import copy
 from  .tools import *
 from . import debug
 
+
+"""
+Functions to take a catalogue of DM halos (with 3d positions, masses, luminosities, etc)
+and turn them into a 3D intensity map, complete with mock observational effects
+"""
+
 @timeme
 class SimMap():
     """
-    designer class to hold the simulated maps and their metadata
+    designer class to hold simulated maps and their metadata
+
+    inputs:
+    -------
+        params: SimParameters object
+            holds all of the simulation parameters for the map
+        inputfile: str, optional
+            path to file containing a saved data cube generated using this code
+            if passed, will load that data cube into a map object, otherwise will create
+            a blank map object
     """
     def __init__(self, params, inputfile=None):
+        # if inputfile is passed, load that data cube in, otherwise start an empty object
         if inputfile:
             self.from_file(inputfile, params)
         else:
@@ -26,6 +42,11 @@ class SimMap():
         """
         Adds input parameters to be kept by the map class and gets map details
         (this is just params_to_mapinst from the og limlam_mocker)
+
+        inputs:
+        -------
+            params: SimParameters object. 
+                see param_argparser.py for descriptions of all the parameters used here
         """
 
         self.nmaps  = int(params.nmaps)
@@ -76,6 +97,14 @@ class SimMap():
     def from_file(self, inputfile, params):
         """
         load in map object from a file previously saved by this code
+
+        inputs:
+        -------
+            inputfile: str
+                path to file containing map data
+            params: SimParameters object
+                pulls most of the parameters from the saved file itself, but will use
+                nu_i, nuf, nu_rest, nmaps, and cosmo
         """
         
         # parameters saved in the code
@@ -127,6 +156,9 @@ class SimMap():
 
 
     def copy(self):
+        """
+        return a deep copy of the SimMap object (to avoid overwriting confusion)
+        """
         return copy.deepcopy(self)
 
 
@@ -137,9 +169,10 @@ class SimMap():
 
         most of this is stolen from the original limlam_mocker code:
         Lco_to_map, Lco_to_map_doppler, etc.
-        only the CO beam stuff is actually added by me
+        CO beam fitting added by DD
         """
 
+        """ SET UP """
         ### Calculate line freq from redshift
         halos.nu  = self.nu_rest/(halos.redshift+1)
         try:
@@ -160,8 +193,7 @@ class SimMap():
             if params.verbose: print('\n\tdefaulting to halo temperatures')
             halos.Tco = T_line(halos, self)
 
-        # BINS HALOS SPECTRALLY BY VVIR, MAKES MAPS OF EACH SUBSET, SMOOTHS THEM, AND
-        # THEN COMBINES
+        # bin halos by velocity into bincount bins (will be smoothed in those chunks)
         if 1==params.bincount or not params.freqbroaden:
             subsets = [halos]
         else:
@@ -177,8 +209,13 @@ class SimMap():
                             for v1,v2 in zip(attr_ranges[:-1], attr_ranges[1:])]
             params.verbose = verb
 
-        # SET UP FINER BINNING IN RA, DEC, FREQUENCY
+        # set up finer binnning in RA, DEC, frequency
         # (if oversampling isn't necessary these will just be equal to the regular sampling)
+        # check that oversampling isn't necessary and xrefine is appropriate
+        if params.beambroaden == False:
+            params.xrefine = 1
+        if params.freqbroaden == False:
+            params.freqrefine = 1
         bins3D_fine = [np.linspace(min(self.pix_binedges_x),
                                    max(self.pix_binedges_x),
                                    len(self.pix_binedges_x[1:])*params.xrefine+1),
@@ -193,12 +230,15 @@ class SimMap():
         dy_fine = np.mean(np.diff(bins3D_fine[1]))
         dnu_fine = np.mean(np.diff(bins3D_fine[-1]))
 
+        """ MAKE MAP OF LIM TRACER """
+        # empty array to hold the map
         maps = np.zeros((len(self.pix_bincents_x)*params.xrefine,
                          len(self.pix_bincents_y)*params.xrefine,
                          len(self.nu_bincents)))
-
+        
+        # if told to, apply line broadening
         if params.freqbroaden:
-
+            # pull velocity values, or create them if they don't exist
             try:
                 velocities = getattr(halos, 'vbroaden')
             except AttributeError:
@@ -207,7 +247,7 @@ class SimMap():
             # pull the relevant parameters out of the params object
             # number of velocity bins to use
             bincount = params.bincount
-            # function to turn halo attributes into a line width (in observed freq space)
+            # function to turn velocity halo attributes into a line width (in observed freq space)
             # default is vmax/c times observed frequency (if set to None)
             fwhmfunc = params.fwhmfunction
             # number of bins by which to oversample in frequency
@@ -217,8 +257,6 @@ class SimMap():
             # if true, will do a fast convolution thing (??)
             lazyfilter = params.lazyfilter
 
-
-            # bin in RA, DEC, NU_obs
             if fwhmfunc is None:
                 # a fwhmfunc is needed to turn halo attributes into a line width
                 #   (in observed frequency space)
@@ -228,23 +266,18 @@ class SimMap():
             # for each velocity bin, convolve all halos with a kernel of the same width and then add onto the map
             for i,sub in enumerate(subsets):
                 if sub.nhalo < 1: continue;
+                # make the fine-resolution map
                 maps_fine = np.histogramdd( np.c_[sub.ra, sub.dec, sub.nu],
                                               bins    = bins3D_fine,
                                               weights = sub.Tco )[0]
+                # convert velocities to fwhma
                 if callable(fwhmfunc):
                     sigma = 0.4246609*np.nanmedian(fwhmfunc(sub)) # in freq units (GHz)
                 else: # hope it's a number
                     sigma = 0.4246609*fwhmfunc # in freq units (GHz)
                 if sigma > 0:
                     if lazyfilter:
-                        if lazyfilter=='rehist':
-                            # uses fast_histogram assuming map bins are evenly spaced
-                            filteridx = fast_histogram.histogram2d(sub.ra,sub.dec,
-                                                        (self.npix_x, self.npix_y),
-                                                        ((-self.fov_x/2, self.fov_x/2),
-                                                         (-self.fov_y/2, self.fov_y/2))) > 0
-                        else:
-                            filteridx = np.where(np.any(maps_fine, axis=-1))
+                        filteridx = np.where(np.any(maps_fine, axis=-1))
                         maps_fine[filteridx] = filterfunc(maps_fine[filteridx], sigma/dnu_fine)
                     else:
                         maps_fine = filterfunc(maps_fine, sigma/dnu_fine)
@@ -258,7 +291,7 @@ class SimMap():
             self.map = maps[:,:,::-1]
 
         else:
-            # bin in RA, DEC, NU_obs
+            # bin into map (in RA, DEC, NU_obs)
             if params.verbose: print('\n\tBinning halos into map')
             maps, edges = np.histogramdd( np.c_[halos.ra.flatten(), halos.dec.flatten(), halos.nu.flatten()],
                                           bins    = bins3D_fine,
@@ -282,6 +315,7 @@ class SimMap():
             if params.verbose:
                 print('\nsmoothing by synthesized beam: {} channels total'.format(maps.shape[-1]))
 
+            # iterate through channels, smoothing each by the beam kernel
             smoothsimlist = []
             for i in range(maps.shape[-1]):
                 smoothsimlist.append(convolve(maps[:,:,i], beamkernel))
@@ -300,11 +334,14 @@ class SimMap():
                 mapssm/= self.Ompix
             # flip back frequency bins
             self.map = mapssm[:,:,::-1]
+
             
-            """ do the catalog map as well for x-corr, etc """
-            # Transform from Luminosity to Temperature (uK)
+        """ MAKE A MAP OF THE LUMINOSITY VALUES FOR THE CATALOG TRACER 
+            (for cross-correlating fluctuation cubes) """
+        # Transform from Luminosity to Temperature (uK)
         # ... or to flux density (Jy/sr)
         if hasattr(halos, 'Lcat'):
+            # do unit conversions if necessary
             if (params.units=='intensity'):
                 if params.verbose: print('\n\tcalculating halo intensities')
                 halos.Tcat = I_line(halos, self, attribute='Lcat')
@@ -325,12 +362,15 @@ class SimMap():
             # flip back frequency bins
             self.catmap = catmaps[:,:,::-1]
 
+        """ ADD OTHER MOCK THINGS TO MAP """
         if params.add_comap_noise:
+            # add random radiometer noise (using integration time and a 19-feed focal plane array)
             self.add_random_comap_noise(params)
             if params.verbose:
                 print('\nAdding COMAP radiometer noise with {} hr integration time'.format(params.noise_int_time))
 
         if params.add_foreground:
+            # add mock spectral line contamination to the maps (from interloping foregrounds or backgrounds)
             self.add_foreground(params)
             if params.verbose:
                 print('\nAdding foreground emission using permutation {} and a scale factor of {}'.format(params.fg_permutation,
@@ -340,9 +380,12 @@ class SimMap():
         """
         subtract off the mean in each channel and each spaxel (simulates the low-pass filter in an actual map)
         order agrees with the order used by the actual COMAP pipline (ie per-channel and then per-spaxel)
-        uses:
-            self.map 
-        creates:
+        
+        inputs:
+        -------
+            None, uses self.map directly
+        outputs:
+        --------
             self.meanvals: the mean value in each spectral channel and each spaxel, summed together to create a data cube
                             (add it back on to the map to get the original one)
         """
@@ -367,11 +410,18 @@ class SimMap():
 
     def add_random_comap_noise(self, params):
         """
-        quick and dirty way to add randomly-generated noise (in uK) to the CO map 
-        uses:
+        add randomly-generated noise (in uK) to the CO map. doesn't account for any systematics or 
+        asymmetries in the noise response/field coverage 
+
+        inputs:
+        -------
             params.noise_int_time: integration time in hours to simulate (radiometer) noise
+            params.nfeeds: number of focal plane array feeds (default 19 for COMAP)
+                (could also use this parameter for other factors which improve sensitivity by root(N) -- 
+                 number of dishes, etc.)
             params.noise_seed: seed for the random number generator
-        creates:
+        outputs:
+        --------
             self.mapnoise: noise map in uK (just subtract it off the map to get the signal-only cube again)
         """
         # assuming an even spread, fraction of total integration time spent on each voxel
@@ -391,11 +441,15 @@ class SimMap():
 
     def add_foreground(self, params):
         """
-        quick and dirty way to add foreground/background emission
-        uses:
+        quick and dirty way to add foreground/background emission. Note that this does NOT account for any changes in 
+        the large scale structure with reddshift, which may be important for cross-correlations, etc
+        
+        inputs:
+        -------
             params.fg_permutation: integer pointing to how the actual map will be permuted to turn it into a foreground map
             params.fg_scalefactor: how much fainter the foregrounds should be than the actual map
-        creates:
+        outputs:
+        --------
             self.foregroundmap: foreground map in uK (just subtract it off the map to get the signal-only cube again)
         """
 
@@ -431,6 +485,10 @@ class SimMap():
     def write(self, params):
         """
         save 3D data cube in .npz format, including map header information
+
+        inputs:
+        -------
+            params.map_output_file: path to file to save to
         """
         if params.verbose: print('\n\tSaving Map Data Cube to\n\t\t', params.map_output_file)
         print('saving catalog!!')

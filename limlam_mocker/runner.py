@@ -20,7 +20,8 @@ sys.path.append(parent_directory)
 
 def simgenerator(params):
     """
-    wrapper function to run the simulation
+    wrapper function to run a full simulation given a set of parameters
+    save outputs to file
     """
 
     # generate the halo catalog from the passed peak-patch catalog

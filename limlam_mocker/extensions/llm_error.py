@@ -1,5 +1,9 @@
 import numpy as np
 
+"""
+helper functions for calculating uncertainties on power spectra
+"""
+
 def pspec_err_helper(mapinst,Tsys,Nfeeds,tobs,fwhm,cosmo,Wbvec=False):
     # Tsys in K; tobs in sec
     # Oobs in sr; fwhm, dpix in rad

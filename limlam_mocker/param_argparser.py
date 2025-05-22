@@ -144,7 +144,7 @@ parser.add_argument(
     "--units",
     type=str,
     default='temperature',
-    help="(SimGenerator) The brightness units used by the simulations. Defaults to 'intensity'."
+    help="(SimGenerator) The brightness units used by the simulations. Defaults to 'temperature'."
 )
 
 parser.add_argument(

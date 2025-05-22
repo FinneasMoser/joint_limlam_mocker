@@ -8,10 +8,15 @@ import copy
 from  .tools import *
 from . import debug
 
+"""
+Functions for loading and manipulating a catalogue of simulated halos
+"""
+
 
 class HaloCatalog():
     """
-    designer class for holding a catalog of simulated halos
+    Designer class for holding and manipulating a catalog of simulated halos.
+    Used both for holding DM halos to create LIM cubes and for holding a mock galaxy catalogue
     """
 
     def __init__(self, params, inputfile=None, load_all=False):
@@ -27,13 +32,13 @@ class HaloCatalog():
     @timeme
     def load(self, filein, params):
         """
-        Load peak patch halo catalog into halos class
+        Load peak-patch halo catalog into halos class
 
         inputs
         -------
         filein : string
             catalog file output from a peak-patch run
-        params : parameter object
+        params : SimParameters object
             Contains all parameter information, will load cosmology information into this (Omega_i, sigme_8, etc)
         """
 
@@ -96,7 +101,13 @@ class HaloCatalog():
     def cull(self, params):
         """
         crops the halo catalog to only include desired halos (gets rid of those out of the 
-        redshift range, below the minimum mass, etc)
+        redshift range, below the minimum mass, etc), will perform the cut in-place
+        
+        inputs
+        ------
+        params: SimParameters object
+            contains all parameter information. this function will call
+            z_i, z_f, min_mass, mass_cutoff, fov_x, fov_y, verbose
         """
 
         # convert the limits in frequency to limits in redshift
@@ -133,11 +144,30 @@ class HaloCatalog():
         """
         assigns each halo a rotation velocity based on its DM mass
         adds the velocity value to self.vbroaden and also returns it
-        uses params.velocity_attr:
-        if 'vvirincli', calculates the virial velocity and muliplies it by a
-           sin(i), i a randomly generated inclination angle, to simulate the
-           effects of inclination on line broadening
-        if 'vvir', just calculates the virial velocity
+        uses params.velocity_attr
+
+        inputs
+        ------
+        params: SimParameters object
+            contains all parameter information. this function will use velocity_attr, which has options:
+
+            if 'vvir', just calculates the virial velocity
+            if 'vvirincli', calculates the virial velocity and muliplies it by sin(i), i a randomly generated 
+                inclination angle, to simulate the effects of inclination on line broadening
+            if 'vvirincli_scaled', will scale the virial velocty by an input parameter ('vvirscalefactor').
+            if 'vvir_cutoff', will cut the velocities off that are above some value 'vvircutoff'
+
+        outputs
+        -------
+        returns nothing, but adds to the following attributes:
+        self.sin_i: array of len nhalo
+            sin(i) for randomly-chosen inclinations assigned to each halo
+        self.vvir: array of len nhalo
+            the virial velocity (claculated from the halo mass and redshift) of each halo
+        self.vbroaden: array of len nhalo
+            the 'observed' velocity of each halo, calculated using the passed method
+        params.filterfunc: scipy.ndimage filter kernel
+            function to generate an arbitrary one-dimensional gaussian filter
         """
         vvir = lambda M,z:35*(M*self.cosmo.H(z).value/1e10)**(1/3) # km/s
 
@@ -184,10 +214,8 @@ class HaloCatalog():
             scvmpeak = 10**(np.log10(vmpeak)*rng.normal(1,0.1, len(vmpeak)))
             self.vbroaden = scvmpeak*self.sin_i/0.866
 
-
-
         elif params.velocity_attr == 'vvir':
-            # Calculate doppler parameters
+            # straight virial velocity
             self.sin_i = np.sqrt(1-np.random.uniform(size=self.nhalo)**2)
             self.vbroaden = vvir(self.M, self.redshift)
 
@@ -198,10 +226,16 @@ class HaloCatalog():
     def offset_velocities(self, params):
         """
         offsets the catalog from the CO in redshift by some velocities. 
-        uses
-            params.vcat_offset: mean offset (in km/s)
-            params.vcat_scatter: scatter in the mean offset (in km/s)
-        saves
+        
+        inputs:
+        -------
+        params: SimParameters object
+            uses specifically
+                params.vcat_offset: mean offset (in km/s)
+                params.vcat_scatter: scatter in the mean offset (in km/s)
+        outputs:
+        --------
+        No output, but alters
             self.zcat: new catalog redshifts 
         """
 
@@ -223,11 +257,22 @@ class HaloCatalog():
         """
         cuts the catalog by observational parameters: cuts to only objects above a certain luminosity
         and then randomly selects N objects from that cut list.
-        uses:
-            params.lcat_cutoff: the lower limit on catalog luminosity to include (in Lsun)
-            params.goal_nobj: number of catalog objects to include once the cut is made
-            params.vcat_seed: rng seed (using the velocity one)
-            params.obs_weight: whether observation culling should be logarithmic or linear
+        
+        inputs:
+        -------
+        params: SimParameters object
+            uses specifically
+                params.lcat_cutoff: the lower limit on catalog luminosity to include (in Lsun)
+                params.goal_nobj: number of catalog objects to include once the cut is made
+                params.vcat_seed: rng seed (using the velocity one)
+                params.obs_weight: whether observation culling should be logarithmic or linear
+        in_place: bool (optional, default=True)
+            if True, performs cuts on this HaloCatalog object. if False, returns a copy of the object
+            with cuts applied
+        outputs:
+        --------
+        halos: HaloCatalog object (if in_place = True)
+            copy of the input HaloCatalog object with the observational cuts applied
         """
 
         if not in_place:
@@ -272,6 +317,18 @@ class HaloCatalog():
         """
         crops the halo catalog to only include halos included in the passed index
         array.
+
+        inputs:
+        -------
+        idx: array-like, integer
+            the catalog indices to cut the catalog to
+        in_place: bool (optional, default=True)
+            if True, performs cuts on this HaloCatalog object. if False, returns a copy of the object
+            with cuts applied
+        outputs:
+        --------
+        subset: HaloCatalog object (if in_place=False)
+            a copy of the catalog object with the cuts applied
         """
         # assert np.max(idx) <= self.nhalo,   "Too many indices"
 
@@ -307,6 +364,24 @@ class HaloCatalog():
         """
         crops the halo catalog to only include desired halos, based on some arbitrary
         attribute attr. will include haloes with attr from minval to maxval.
+
+        inputs:
+        -------
+        attr: str
+            the attribute of the HaloCatalog object to subset - will keep (minval,maxval]
+        minval: float
+            the minimum value to be kept
+        maxval: float
+            the maximum value to be kept 
+        params: SimParameters object
+            the parameters for the simulation run. uses:
+                verbose: (bool) write more detailed messages to terminal if true
+        in_place: bool
+            if True, apply cuts directly to this HaloCatalog object. If False, returns a copy of the object
+        outputs:
+        --------
+        subset: HaloCatalog object (if in_place==False)
+            a copy of the input HaloCatalog object with the cuts applied
         """
 
         keepidx = np.where(np.logical_and(getattr(self,attr) > minval,
@@ -346,7 +421,7 @@ class HaloCatalog():
 
     def masscut_subset(self, min_mass, max_mass, in_place=False):
         """
-        cut on mass specifically (for convenience)
+        same as attrcut_subset, but a cut on mass specifically (for convenience)
         """
         if in_place:
             self.attrcut_subset('M', min_mass, max_mass, in_place=True)
@@ -355,7 +430,7 @@ class HaloCatalog():
 
     def vmaxcut_subset(self, min_vmax, max_vmax, in_place=False):
         """
-        cut on vmax specifically (for convenience)
+        same as attrcut_subset, but a cut  on vmax specifically (for convenience)
         """
         if in_place:
             self.attrcut_subset('vmax', min_vmax, max_vmax, in_place=True)
@@ -365,19 +440,40 @@ class HaloCatalog():
 
     def write_cat(self, params, trim=None, writeall=False):
         """
-        save halos as npz catalog
+        Write the halos to a .npz file
+
+        inputs:
+        -------
+        params: parameters object
+            the parameters for the simulation run. uses:
+                cat_output_file: (str) the filename to be saved to (should be npz)
+                verbose: (bool) writes more detailed messages to terminal
+        trim: int (optional, default None)
+            if this has a value, it will trim the catalog to the first N=trim objects before saving
+            (this is mainly for convenience while debugging, because there can be many millions of objects
+             in the peakpatch catalogues)
+        writeall: bool (optional, default False)
+            if True, will save all of the various values for each halo. Otherwise, just saves ra, dec, 
+            redshift, mass, vhalo, Lco, and Lcat
+        outputs:
+        --------
+        None (saves catalogue to params.cat_output_file)
         """
         if params.verbose: print('\n\tSaving Halo catalog to\n\t\t', params.cat_output_file)
+
+        # trim the catalog to the first N=trim objects if trim is passed
         if trim:
             i = trim
         else:
             i = -1
 
+        # fill in the velocity array with negatives if they haven't already been calculated
         try:
             velocities = self.vbroaden[:i]
         except AttributeError:
             velocities = np.ones(len(self.dec[:i])) * -99
 
+        # write
         if writeall:
             np.savez(params.cat_output_file,
                      dec=self.dec[:i], nhalo=len(self.dec[:i]),

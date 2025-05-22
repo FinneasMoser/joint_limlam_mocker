@@ -15,8 +15,9 @@ from .param_argparser import *
 
 class empty_table():
     """
-    simple Class creating an empty table
+    simple class creating an empty table
     used for halo catalog and map instances
+    (allows for attribute assignment)
     """
     def __init__(self):
         pass
@@ -29,7 +30,10 @@ class empty_table():
 ### PARAMETER MANAGEMENT
 class SimParameters():
     """
-    simple Class used to hold all the parameters that commonly need to be passed between functions
+    class used to hold all the parameters that commonly need to be passed between functions
+    arguments can be passed either using argparse or in a file with a set of default parameters
+    (or can be assigned in the script after the fact)
+    a list of parameters (and their defaults) is in param_argparser.py
     """
     def __init__(self):
         # read arguments in from argparser and store them in this (copyable, printable) class
@@ -55,6 +59,7 @@ class SimParameters():
         return copy.deepcopy(self)
 
     def print(self):
+        """output the current set of attributes"""
         attrlist = []
         for i in dir(self):
             if i[0]=='_': continue
@@ -94,27 +99,21 @@ def timeme(method):
 
     return wrapper
 
-def module_directory(name_module, path):
-    """
-    Allows for modules to be imported to be passed as strings, and to be
-    updated dynamically.
-
-    Inputs:
-    -------
-    name_module : string
-        file name to be imported as a module
-    path: path to the module file to be imported (INCLUDING file name)
-
-    """
-    P = importlib.util.spec_from_file_location(name_module, path)
-    import_module = importlib.util.module_from_spec(P)
-    P.loader.exec_module(import_module)
-    return import_module
-
 def make_output_filenames(params, outputdir=None):
     """
-    Uses the parameters in the input file to automatically change the name of the
-    result files to be output - the cube file and the two plot files if plotting
+    Uses the parameters in the input file to set up the result files to be output
+    (the cube file, catalogue file and the two plot files if plotting)
+
+    inputs:
+    -------
+        params: SimParameters object
+            uses params.halo_catalog_file
+        outputdir: str (optional)
+            directory to prepend to file names (defaults to './output/')
+    outputs:
+    --------
+        adds map_output_file, halo_output_file, plot_cube_file, plot_pspec_file
+
     """
     # default to a folder with the model name in a folder called output
     if not outputdir:
@@ -209,7 +208,7 @@ def nuobs_to_nuem(nuobs, z):
 def log_lum_func(halos, mapinst, params, attribute='Lcat', lumrange=None, nbins=500, unit=u.erg/u.s):
     """
     calculates a luminosity function in logspace from a halo catalog
-    ------
+    
     INPUTS
     ------
         halos: 
@@ -226,7 +225,6 @@ def log_lum_func(halos, mapinst, params, attribute='Lcat', lumrange=None, nbins=
             (int, default 500) the number of bins to use when histogramming
         unit:
             (astropy.units object, default erg/s) the unit to return the x axis in
-    -------
     OUTPUTS
     -------
         bincents:
