@@ -1,7 +1,7 @@
 Joint Limlam Mocker: A package for Line Intensity Mocks
 =================================================
 
-This is a fork of Dongwoo Chung and George Stein's limlam mocker package, intended to create mock line intensity maps and galaxy catalogs for joint LIM analyses. It has been modified heavily from the original version. Additions include the second spectral line tracer (which can be filtered into a mock catalog), line broadening and beam smoothing, and simulated instrumental effects (such as instrumental noise or spectral line interlopers). The package is summarized in detail in [Dunne et al. 2025](https://arxiv.org/abs/2503.21743).
+This is a fork of Dongwoo Chung and George Stein's limlam mocker package, intended to create mock line intensity maps and galaxy catalogs for joint LIM analyses. It has been modified heavily from the original version. Additions include the second spectral line tracer (which can be filtered into a mock catalog), line broadening and beam smoothing, and simulated instrumental effects (such as instrumental noise or spectral line interlopers). The package is summarized in detail in `Dunne et al. 2025 <https://arxiv.org/abs/2503.21743>`_.
 
 To Run
 ------
