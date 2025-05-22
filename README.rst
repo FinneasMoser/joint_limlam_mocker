@@ -1,7 +1,7 @@
-Limlam Mocker: A package for Line Intensity Mocks
+Joint Limlam Mocker: A package for Line Intensity Mocks
 =================================================
 
-This is a fork of lumlam mocker, a barebones code to create line intensity maps from a given halo catalogue. It has been modified to generate halo luminosities for different tracers for the same set of halos, to smooth by a simulated telescope beam, and to automatically simulate astrophysical line broadening of the CO emission. 
+This is a fork of Dongwoo Chung and George Stein's limlam mocker package, intended to create mock line intensity maps and galaxy catalogs for joint LIM analyses. It has been modified heavily from the original version. Additions include the second spectral line tracer (which can be filtered into a mock catalog), line broadening and beam smoothing, and simulated instrumental effects (such as instrumental noise or spectral line interlopers). The package is summarized in detail in [Dunne et al. 2025](https://arxiv.org/abs/2503.21743).
 
 To Run
 ------
@@ -67,10 +67,9 @@ The basic `limlam_mocker` module allows for calculation of line-intensity auto-c
         >>> from limlam_mocker.extensions import llm_error as llme
 `llm_xcorr` provides an extended version of the default `map_to_pspec.py` code, reducing redundant definitions of k-space parameters and allowing calculations of auto and cross spectra. `llm_error` automatically allows for calculation of noise power spectra for heterodyne receivers and all-k signal-to-noise for auto and cross spectra. Documentation on both is currently sparse, but should be improved in future.
 
-This code was written by George Stein    - gstein@cita.utoronto.ca
-    with many additions by Dongwoo Chung - dongwooc@stanford.edu
+This code was written by George Stein    - gstein@cita.utoronto.ca, with many additions by Dongwoo Chung - dongwooc@stanford.edu. It was then cannibalized and reformatted (with some additions) by Delaney Dunne - ddunne@astro.caltech.edu.
 
-A version with many more options and functions (useful power spectrum calculation too!) can be found at https://github.com/dongwooc/imapper2, written by Tony Li and Dongwoo Chung.
+A version of the original (non-joint) code with many more options and functions (useful power spectrum calculation too!) can be found at https://github.com/dongwooc/imapper2, written by Tony Li and Dongwoo Chung.
 
 License
 -------
