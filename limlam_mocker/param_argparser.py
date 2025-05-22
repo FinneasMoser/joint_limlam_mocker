@@ -101,7 +101,7 @@ parser.add_argument(
 parser.add_argument(
     "--catdex",
     type=float,
-    default=0.5,
+    default=0.41,
     help="(SimGenerator) Size of the artificial scatter in the tracer luminosities. Defaults to 0.5."
 )
 

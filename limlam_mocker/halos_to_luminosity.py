@@ -673,8 +673,8 @@ def add_co_tracer_dependant_scatter(halos, rho, codex, catdex, seed):
 
     # change those into lognormal scalings (output of this would be the same as pulling from
     # np.random.lognormal for a single variable)
-    logscaleco = np.exp(coscale*sigmaco + muco)
-    logscaletr = np.exp(trscale*sigmatr + mutr)
+    logscaleco = np.exp(coscale + muco)
+    logscaletr = np.exp(trscale + mutr)
 
     # slap scalings onto existing catalog and co luminosities
     halos.Lco = halos.Lco*logscaleco
