@@ -5,7 +5,6 @@ import astropy.units as u
 import astropy.constants as const
 import sys
 import os
-from . import debug
 from .tools import *
 
 sfr_interp_tab = None
@@ -141,8 +140,6 @@ def Mhalo_to_Lco_Li(halos, coeffs, scatter=True):
     if scatter:
         Lco      = add_log_normal_scatter(Lco, sigma_lco, 2)
 
-    if debug.verbose: print('\n\tMhalo to Lco calculated')
-
     return Lco
 
 def Mhalo_to_Lco_Li_sigmasc(halos, coeffs, scatter=True):
@@ -175,8 +172,6 @@ def Mhalo_to_Lco_Li_sigmasc(halos, coeffs, scatter=True):
 
     if scatter:
         Lco      = add_log_normal_scatter(Lco, sigma_sc, 2) 
-
-    if debug.verbose: print('\n\tMhalo to Lco calculated')
 
     return Lco
 

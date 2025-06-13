@@ -1,6 +1,5 @@
 from __future__ import absolute_import, print_function
 import numpy as np
-from . import debug
 from .tools import *
 
 @timeme
@@ -24,7 +23,6 @@ def map_to_pspec(map,cosmo,attribute='maps'):
     nmodes : `~numpy.ndarray`
         Number of modes in each k bin
     """ 
-    if debug.verbose: print("\n\tCalculating power spectrum")
 
     x,y,z = map.pix_binedges_x, map.pix_binedges_y, map.nu_binedges
     t     = getattr(map,attribute)

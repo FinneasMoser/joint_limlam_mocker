@@ -8,7 +8,6 @@ from scipy.ndimage import gaussian_filter1d, uniform_filter1d
 from astropy.convolution import convolve, Gaussian2DKernel
 import copy
 from  .tools import *
-from . import debug
 
 
 """

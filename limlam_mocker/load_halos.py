@@ -6,7 +6,6 @@ import astropy.constants as const
 from scipy.ndimage import gaussian_filter1d, uniform_filter1d
 import copy
 from  .tools import *
-from . import debug
 
 """
 Functions for loading and manipulating a catalogue of simulated halos

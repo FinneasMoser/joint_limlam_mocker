@@ -1,5 +1,4 @@
 from __future__ import print_function
-from . import debug
 import time
 import datetime
 import os
@@ -94,7 +93,7 @@ def timeme(method):
         result = method(*args, **kw)
         endTime = int(round(time.time()))
 
-        if debug.verbose: print('  ',endTime - startTime,'sec')
+        print('  ',endTime - startTime,'sec')
         return result
 
     return wrapper
@@ -264,7 +263,7 @@ def plot_results(mapinst,k,Pk,Pk_sampleerr,params):
     """
     Plot central frequency map and or powerspectrum
     """
-    if debug.verbose: print("\n\tPlotting results")
+    if params.verbose: print("\n\tPlotting results")
 
     ### Plot central frequency map
     plt.rcParams['font.size'] = 16
