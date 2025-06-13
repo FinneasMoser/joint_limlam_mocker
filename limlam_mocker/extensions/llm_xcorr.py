@@ -31,7 +31,7 @@ def _ra_dec_nu_to_hitmap(ra,dec,nu,mapinst,weights=None):
                     mapinst.nu_binedges[::-1]), weights=weights )
     return hitmaps[:,:,::-1]
 
-def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1,logscale=False):
+def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1,logscale=False,inputkbins=None):
     """
     define a grid of k-scales to perform the fft at
 
@@ -46,6 +46,9 @@ def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1,logscale=False):
             assumes they should be incremented by the mapinst voxel size)
         logscale: bool (optional, defualt=False)
             if true, will logspace bins rather than linspace them
+        kbins: arraylike of floats (optional, default=None)
+            if passed, will bin power spectrum onto this array rather than an 
+            automatically-generated one
     outputs:
     --------
     adds attributes to mapinst:
@@ -65,32 +68,57 @@ def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1,logscale=False):
             unit conversion to get to power spectrum
     """
     x,y,z = mapinst.pix_binedges_x, mapinst.pix_binedges_y, mapinst.nu_binedges
+    # calculate the comoving distance to each frequency bin
     zco = redshift_to_chi(mapinst.nu_rest/z-1).value
     # assume comoving transverse distance = comoving distance
     #     (i.e. no curvature)
-    avg_ctd = np.mean(zco)
+    avg_ctd = np.mean(zco) # average comoving distance
+    # (relative) comoving transverse distance of each spaxel
     xco = x/(180)*np.pi*avg_ctd
     yco = y/(180)*np.pi*avg_ctd
+    # mean width in cMpc of each voxel along each axis
     dxco, dyco, dzco = [np.abs(np.mean(np.diff(d))) for d in (xco, yco, zco)]
+    # volume of a voxel in cMpc
     mapinst.voxcovol = dxco*dyco*dzco
+    # volume of the whole map in cMpc
     mapinst.totalcovol = np.ptp(xco)*np.ptp(yco)*np.ptp(zco)
+    # edges of each voxel in fourier space (k bins)
     kx = 2*np.pi*np.fft.fftfreq(xco.size-1,d=dxco)
     ky = 2*np.pi*np.fft.fftfreq(yco.size-1,d=dyco)
     kz = 2*np.pi*np.fft.rfftfreq(zco.size-1,d=dzco)
     mapinst.kvec = np.meshgrid(kx,ky,kz,indexing='ij')
+    # spherically averaged k values for each voxel
     kgrid = np.sqrt(sum(ki**2 for ki in mapinst.kvec))
+    # generated spacing between k bins for the final power spectrum 
+    # (equal to the smallest distance between two voxels)
     dk = max(np.diff(kx)[0],np.diff(ky)[0],np.diff(kz)[0])*dk_scale
+    # number of k bins
     kmax_dk = int(np.ceil(max(np.amax(kx),np.amax(ky),np.amax(kz))/dk))
-    # bin EDGES
-    if not logscale:
-        kbins = np.linspace(0,kmax_dk*dk,kmax_dk+1)
+
+    # define the k-values to bin the 1D power spectrum onto
+    if inputkbins:
+        # if bins are passed, just use those
+        kbins = inputkbins
     else:
-        kbins = np.logspace(-1.39, np.log10(kmax_dk*dk),kmax_dk+1)
+        # generate some bins
+        if not logscale:
+            # linear spacing
+            kbins = np.linspace(0,kmax_dk*dk,kmax_dk+1) # bin EDGES
+        else:
+            # logarithmic spacing
+            kbins = np.logspace(-1.39, np.log10(kmax_dk*dk),kmax_dk+1) # bin EDGES
+    
+    # number of fourier modes contributing to each bin
     Nmodes = np.histogram(kgrid[kgrid>0],bins=kbins)[0]
     
-    # bin CENTERS
+    # centers of each bin
     k = (kbins[1:]+kbins[:-1])/2
+
+    # transformation between a given field's fourier transform and the resulting power spectrum
+    # (just equal to Vvox^2/Vsurv)
     fftsq_to_Pk=(dxco*dyco*dzco)**2/np.abs(np.ptp(xco)*np.ptp(yco)*np.ptp(zco))
+
+    # save quantities
     mapinst.k = k
     mapinst.kbins = kbins
     mapinst.kgrid = kgrid
