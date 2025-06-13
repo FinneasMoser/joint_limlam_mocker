@@ -96,7 +96,7 @@ def _def_kspace_params(mapinst,redshift_to_chi,dk_scale=1,logscale=False,inputkb
     kmax_dk = int(np.ceil(max(np.amax(kx),np.amax(ky),np.amax(kz))/dk))
 
     # define the k-values to bin the 1D power spectrum onto
-    if inputkbins:
+    if np.any(inputkbins):
         # if bins are passed, just use those
         kbins = inputkbins
     else:
