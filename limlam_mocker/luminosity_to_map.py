@@ -353,7 +353,7 @@ class SimMap():
                 if params.verbose: print('\n\tcalculating halo temperatures')
                 halos.Tcat = T_line(halos, self, attribute='Lcat')
             else:
-                if params.verbose: print('\n\tleaving as halo masses')
+                if params.verbose: print('\n\tpreserving halo masses')
                 halos.Tcat = halos.M 
                 
                 
